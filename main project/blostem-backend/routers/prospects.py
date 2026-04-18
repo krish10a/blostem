@@ -163,3 +163,32 @@ def map_personas(prospect_id: int, db: Session = Depends(get_db)):
         traceback.print_exc()
         raise HTTPException(status_code=500, detail=str(e))
 
+@router.post("/{prospect_id}/generate-outreach", response_model=schemas.ProspectResponse)
+def generate_outreach(prospect_id: int, db: Session = Depends(get_db)):
+    from services.ai_service import generate_outreach_sequence
+    import json
+    
+    prospect = db.query(models.Prospect).filter(models.Prospect.id == prospect_id).first()
+    if not prospect:
+        raise HTTPException(status_code=404, detail="Prospect not found")
+        
+    if not prospect.persona_map:
+        raise HTTPException(status_code=400, detail="Prospect has no persona mappings. Map personas first.")
+        
+    try:
+        outreach_data = generate_outreach_sequence(
+            company_name=prospect.company_name,
+            industry=prospect.industry,
+            signals_json=prospect.signals,
+            persona_map_json=prospect.persona_map
+        )
+        
+        prospect.messages = json.dumps(outreach_data)
+        
+        db.commit()
+        db.refresh(prospect)
+        return prospect
+    except Exception as e:
+        import traceback
+        traceback.print_exc()
+        raise HTTPException(status_code=500, detail=str(e))

@@ -5,6 +5,7 @@ import ProspectIntakeForm from "@/components/ProspectIntakeForm";
 import ProspectCSVUpload from "@/components/ProspectCSVUpload";
 import SignalIntelligencePanel from "@/components/SignalIntelligencePanel";
 import PersonaMappingPanel from "@/components/PersonaMappingPanel";
+import OutreachGenerationPanel from "@/components/OutreachGenerationPanel";
 import { Card, CardHeader, CardTitle, CardContent } from "@/components/ui/card";
 
 export default function Home() {
@@ -151,6 +152,29 @@ export default function Home() {
                 onPersonasGenerated={(updated) => {
                   setSelectedProspect(updated);
                   fetchProspects();
+                }}
+              />
+            )}
+            
+            {selectedProspect && (
+              <OutreachGenerationPanel
+                prospect={selectedProspect}
+                onUpdate={() => {
+                  fetchProspects();
+                  // Re-fetch the selected prospect for UI refresh
+                  const refresh = async () => {
+                    try {
+                      const res = await fetch(`http://127.0.0.1:8000/prospects/`);
+                      if (res.ok) {
+                        const data = await res.json();
+                        const updatedSelected = data.find((p: any) => p.id === selectedProspect.id);
+                        if (updatedSelected) {
+                          setSelectedProspect(updatedSelected);
+                        }
+                      }
+                    } catch (e) {}
+                  };
+                  refresh();
                 }}
               />
             )}

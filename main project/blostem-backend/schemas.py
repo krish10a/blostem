@@ -79,3 +79,15 @@ class Persona(BaseModel):
 
 class PersonaMapOutput(BaseModel):
     personas: list[Persona]
+
+class OutreachMessage(BaseModel):
+    channel: str
+    subject: str
+    body: str
+
+class PersonaOutreach(BaseModel):
+    persona_name: str
+    messages: list[OutreachMessage]
+
+class OutreachGenerationOutput(BaseModel):
+    outreach_payload: list[PersonaOutreach]

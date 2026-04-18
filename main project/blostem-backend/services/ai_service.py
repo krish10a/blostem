@@ -3,7 +3,7 @@ import json
 from google import genai
 from dotenv import load_dotenv
 
-from schemas import SignalsOutput, ScoringSubScores, PersonaMapOutput
+from schemas import SignalsOutput, ScoringSubScores, PersonaMapOutput, OutreachGenerationOutput
 
 load_dotenv()
 
@@ -159,6 +159,58 @@ def generate_persona_mapping(company_name: str, industry: str, signals_json: str
             'response_mime_type': 'application/json',
             'response_schema': PersonaMapOutput,
             'temperature': 0.2
+        }
+    )
+
+    result_json = response.text
+    if result_json.startswith("```json"):
+        result_json = result_json.replace("```json", "").replace("```", "").strip()
+        
+    return json.loads(result_json)
+
+def generate_outreach_sequence(company_name: str, industry: str, signals_json: str, persona_map_json: str) -> dict:
+    """
+    Calls Gemini API to output highly personalized, compliance-safe sales outreach messages (Emails, LinkedIn) for each identified persona.
+    """
+    client = get_client()
+
+    prompt = f"""
+    You are an elite B2B Fintech Account Executive closing multi-million dollar deals.
+    You need to write hyper-personalized outreach sequences for the decision-makers at {company_name} ({industry or 'Unknown Industry'}).
+    
+    CRITICAL RULE: NOTHING you write should be a generic template. ALL MESSAGES must be hyper-specific to the exact Persona Pain Points, Pitch Angle, and the Company Signals provided below. 
+    You must be compliance-safe: NO false promises, NO regulatory overstatements, NO spammy "cheap" sales language.
+    
+    Personalization & Tone:
+    - Use placeholders like `[Prospect Name]` and `[Your Name]` to make the messages feel human and direct.
+    - Maintain a professional, peer-to-peer executive tone.
+    
+    Formatting:
+    - IMPORTANT: Do not return a single block of text.
+    - Use standard professional email/message formatting with clear paragraphs and double line breaks (`\\n\\n`) between them.
+    - Keep paragraphs short (2-3 sentences max) for high readability.
+    
+    Here is the Company Context (Signals):
+    {signals_json}
+    
+    Here are the specific Stakeholders and their tailored angles (Personas):
+    {persona_map_json}
+    
+    For EVERY persona in the map, you must generate exactly three outreach messages:
+    1. "Email - Initial" (Include a concise, hyper-focused Subject Line)
+    2. "Email - Follow-up" (Include a concise Subject Line)
+    3. "LinkedIn Connection" (Keep the subject field blank or "N/A", keep body under 300 chars, highly personalized)
+    
+    Return a JSON object conforming strictly to the requested schema.
+    """
+
+    response = client.models.generate_content(
+        model='gemini-2.5-flash',
+        contents=prompt,
+        config={
+            'response_mime_type': 'application/json',
+            'response_schema': OutreachGenerationOutput,
+            'temperature': 0.3
         }
     )
 
