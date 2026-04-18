@@ -3,7 +3,7 @@ import json
 from google import genai
 from dotenv import load_dotenv
 
-from schemas import SignalsOutput, ScoringSubScores
+from schemas import SignalsOutput, ScoringSubScores, PersonaMapOutput
 
 load_dotenv()
 
@@ -132,3 +132,38 @@ def generate_lead_score(signals_json: str, company_name: str) -> dict:
         "score_explanation": sub_scores["score_explanation"],
         "short_justification": sub_scores["short_justification"]
     }
+
+def generate_persona_mapping(company_name: str, industry: str, signals_json: str) -> dict:
+    """
+    Calls Gemini API to map key personas and generate tailored pitch angles.
+    """
+    client = get_client()
+
+    prompt = f"""
+    You are an elite B2B Fintech Sales Strategist.
+    Based on the specific signals and company profile below, identify 3-5 key decision-making personas (e.g. Founder, Head of Product, Compliance Lead).
+    For each persona, output their specific pain points, likely objections, the best pitch angle for Blostem, the recommended message tone, and the call-to-action style.
+    Do not use generic fluff. Be highly specific to their industry and the signals.
+    
+    Company: {company_name}
+    Industry: {industry or 'Unknown'}
+    Signals: {signals_json}
+
+    Return a list of personas matching the provided JSON schema.
+    """
+
+    response = client.models.generate_content(
+        model='gemini-2.5-flash',
+        contents=prompt,
+        config={
+            'response_mime_type': 'application/json',
+            'response_schema': PersonaMapOutput,
+            'temperature': 0.2
+        }
+    )
+
+    result_json = response.text
+    if result_json.startswith("```json"):
+        result_json = result_json.replace("```json", "").replace("```", "").strip()
+        
+    return json.loads(result_json)

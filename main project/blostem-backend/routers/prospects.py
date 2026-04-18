@@ -133,3 +133,33 @@ def score_prospect(prospect_id: int, db: Session = Depends(get_db)):
         traceback.print_exc()
         raise HTTPException(status_code=500, detail=str(e))
 
+@router.post("/{prospect_id}/map-personas", response_model=schemas.ProspectResponse)
+def map_personas(prospect_id: int, db: Session = Depends(get_db)):
+    from services.ai_service import generate_persona_mapping
+    import json
+    
+    prospect = db.query(models.Prospect).filter(models.Prospect.id == prospect_id).first()
+    if not prospect:
+        raise HTTPException(status_code=404, detail="Prospect not found")
+        
+    if not prospect.signals:
+        raise HTTPException(status_code=400, detail="Prospect has no signals. Generate signals first.")
+        
+    try:
+        persona_data = generate_persona_mapping(
+            company_name=prospect.company_name,
+            industry=prospect.industry,
+            signals_json=prospect.signals
+        )
+        
+        # persona_data is a dict with a "personas" key since it corresponds to PersonaMapOutput schema
+        prospect.persona_map = json.dumps(persona_data)
+        
+        db.commit()
+        db.refresh(prospect)
+        return prospect
+    except Exception as e:
+        import traceback
+        traceback.print_exc()
+        raise HTTPException(status_code=500, detail=str(e))
+

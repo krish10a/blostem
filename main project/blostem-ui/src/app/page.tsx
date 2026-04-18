@@ -4,6 +4,7 @@ import { useEffect, useState } from "react";
 import ProspectIntakeForm from "@/components/ProspectIntakeForm";
 import ProspectCSVUpload from "@/components/ProspectCSVUpload";
 import SignalIntelligencePanel from "@/components/SignalIntelligencePanel";
+import PersonaMappingPanel from "@/components/PersonaMappingPanel";
 import { Card, CardHeader, CardTitle, CardContent } from "@/components/ui/card";
 
 export default function Home() {
@@ -138,6 +139,20 @@ export default function Home() {
               <div className="border border-dashed border-zinc-300 dark:border-zinc-800 rounded-lg p-12 text-center text-zinc-400 bg-zinc-50/50 dark:bg-zinc-900/50">
                 Select a prospect from the pipeline to process AI intelligence.
               </div>
+            )}
+          </section>
+
+          {/* PERSONA MAPPING PANEL */}
+          <section className="mt-4 mb-12">
+            {selectedProspect && (
+              <PersonaMappingPanel 
+                prospect={selectedProspect} 
+                key={`persona-${selectedProspect.id}`} 
+                onPersonasGenerated={(updated) => {
+                  setSelectedProspect(updated);
+                  fetchProspects();
+                }}
+              />
             )}
           </section>
 

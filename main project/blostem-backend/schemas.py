@@ -67,3 +67,15 @@ class ScoringOutput(BaseModel):
     confidence_score: float
     score_explanation: str
     short_justification: str
+
+class Persona(BaseModel):
+    persona_name: str
+    role: str
+    pain_points: str
+    objections: str
+    pitch_angle: str
+    message_tone: str
+    call_to_action_style: str
+
+class PersonaMapOutput(BaseModel):
+    personas: list[Persona]
