@@ -5,40 +5,68 @@ Build a functional MVP for enterprise B2B marketing automation using a zero-hall
 
 ## Modules Status
 *   **Module 1: Prospect Intake**: COMPLETED. Manual + CSV ingestion. `prospects` SQLite table defined.
-*   **Module 2: Core Prospect UI Dashboard**: COMPLETED. Glassmorphic React dashboard (`page.tsx`, `ProspectTable.tsx`) running on Next.js communicating with FastAPI.
-*   **Module 3: Signal Intelligence Gen AI Module**: COMPLETED. Automated background research on prospects using `gemini-2.5-flash`. Saving rigorous JSON outputs to database.
-*   **Module 4: Persona Mapping**: COMPLETED. Added generation of targeted stakeholder pain points and pitch angles depending precisely on the collected Signals.
-*   **Module 5: Hyper-Personalized Outreach**: COMPLETED. Includes naming placeholders and professional paragraph formatting.
-    *   **Status**: Backend API fully functional; Frontend Module 5 UI integrated and verified.
-*   **Module 6**: PENDING. (Automated sequence routing/approval pipeline or user review mechanics).
-
-### Current Technical Implementation
-*   **AI Engine**: Gemini 1.5 Flash (via google-genai SDK 0.3.0)
-*   **API**: FastAPI (`/prospects/{id}/generate-outreach`)
-*   **Frontend**: Next.js 15+ (Tailwind v4), Glassmorphic Components
-*   **Personalization**: `[Prospect Name]`, `[Your Name]` placeholders enforced in prompts.
-*   **Formatting**: Short, professional paragraphs with double line breaks for mobile/desktop readability.
+*   **Module 2: Core Prospect UI Dashboard**: COMPLETED. Glassmorphic React dashboard (`page.tsx`) running on Next.js communicating with FastAPI.
+*   **Module 3: Signal Intelligence Gen AI Module**: COMPLETED. Automated background research using `gemini-2.5-flash`. Saving structured JSON outputs to database.
+*   **Module 4: Persona Mapping**: COMPLETED. AI generation of targeted stakeholder pain points and pitch angles from Signals.
+*   **Module 5: Hyper-Personalized Outreach**: COMPLETED. Deeply personalized email + LinkedIn sequences per persona. Uses `[Prospect Name]` / `[Your Name]` placeholders and professional paragraph formatting.
+*   **Module 6: Sequence Review & Export Pipeline**: COMPLETED. Approval workflow + professional XLSX export.
+    *   Added `outreach_status` column to DB (`None` → `DRAFTED` → `APPROVED`).
+    *   `POST /prospects/{id}/approve` to toggle approval status.
+    *   `GET /prospects/export` streams `blostem_export.xlsx` with 2 sheets:
+        - **Sheet 1 (accounts)**: One row per approved company with all scores & persona count.
+        - **Sheet 2 (sequences)**: One row per outreach step (Company, Persona, Channel, Subject, Body).
+    *   Frontend shows "Approve Sequence" / "Revoke Approval" button with status badge.
+    *   "Export Approved (.xlsx)" button in the header bar links directly to the export endpoint.
 
 ## API Endpoints (http://127.0.0.1:8000)
 *   `POST /prospects/`: Create a single prospect
-*   `POST /prospects/bulk`: Upload CSV of multiple prospects
+*   `POST /prospects/upload/`: Upload CSV of multiple prospects
 *   `GET /prospects/`: List all prospects
-*   `POST /prospects/{prospect_id}/signals`: Trigger Gemini Signal Intelligence task
-*   `POST /prospects/{prospect_id}/map-personas`: Trigger Gemini Persona Mapping task
-*   `POST /prospects/{prospect_id}/generate-outreach`: Trigger Gemini Email & LinkedIn Draft Sequence Generation
+*   `POST /prospects/{prospect_id}/generate-signals`: Trigger Signal Intelligence
+*   `POST /prospects/{prospect_id}/score`: Trigger Lead Scoring
+*   `POST /prospects/{prospect_id}/map-personas`: Trigger Persona Mapping
+*   `POST /prospects/{prospect_id}/generate-outreach`: Trigger Outreach Draft Generation (sets status to DRAFTED)
+*   `POST /prospects/{prospect_id}/approve`: Approve or revoke approval (`{ "approve": true/false }`)
+*   `GET /prospects/export`: Download `blostem_export.xlsx` for all APPROVED prospects
 
-## Pydantic Output Entities
-*   `SignalsOutput`: AI extraction representing Pain Points, Product Fit, Stakeholders, Intent Triggers.
-*   `PersonaMapOutput`: Array of objects grouping specific executive roles (e.g., Head of Engineering) to pitch angles, objections, and pain points.
-*   `OutreachGenerationOutput`: Structuring arrays of `OutreachMessage` (Emails, LinkedIn connections) assigned to each precise Persona mapped.
+## Data Model: Prospect Table (SQLite)
+| Field | Type | Description |
+|---|---|---|
+| id | Integer PK | |
+| company_name | String | |
+| website | String | |
+| industry | String | |
+| size | String | |
+| signals | Text JSON | AI signal output |
+| fit_score | Float | |
+| intent_score | Float | |
+| priority_score | Float | |
+| confidence_score | Float | |
+| score_explanation | Text | |
+| persona_map | Text JSON | |
+| messages | Text JSON | OutreachGenerationOutput |
+| sequence_plan | Text | |
+| outreach_status | String | None / DRAFTED / APPROVED |
+| compliance_status | String | |
+| next_action | String | |
+| created_at | DateTime | |
+| updated_at | DateTime | |
+
+## Pydantic Schemas
+*   `ProspectCreate`, `ProspectResponse`, `ProspectUpdate`: Core CRUD
+*   `ApproveSequenceRequest`: `{ approve: bool }` for the approval endpoint
+*   `SignalsOutput`, `ScoringOutput`, `PersonaMapOutput`, `OutreachGenerationOutput`: AI structured outputs
 
 ## Tech Stack Environment
-*   **Backend**: FastAPI, SQLite (`blostem.db`), Pydantic, Uvicorn, Google GenAI SDK (`gemini-2.5-flash`).
-*   **Frontend**: Next.js 15 (Turbopack), React 19, Tailwind CSS, Lucide Icons, Fetch API.
+*   **Backend**: FastAPI, SQLite (`blostem.db`), Pydantic, Uvicorn, Google GenAI SDK (`gemini-2.5-flash`), openpyxl.
+*   **Frontend**: Next.js 16 (Turbopack), React 19, Tailwind CSS v4, Lucide Icons.
+*   **Git**: Branch `b1` on `https://github.com/krish10a/blostem.git`
 
-## Known Operating Mechanics
-*   **Zero-Hallucination**: AI generation strictly requires parsed JSON output enforcing structured schemas (avoiding markdown bleeding).
-*   **UI Integration**: Modular panel drops integrated in the user view (`SignalIntelligencePanel.tsx` -> `PersonaMappingPanel.tsx` -> `OutreachGenerationPanel.tsx`).
+## Constraints (from blostem_brain.md — NEVER VIOLATE)
+*   NO automated email sending (we draft sequences only)
+*   NO CRM integration (Salesforce/HubSpot)
+*   NO browser scraping (Playwright/Puppeteer)
+*   NO heavy ML models — rule-based + Gemini API only
 
 ## Next Module Focus
-Module 6: Final Sequence Routing and Database Synchronization
+Module 7 or final polish — TBD by user.
