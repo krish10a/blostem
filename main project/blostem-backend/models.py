@@ -25,6 +25,10 @@ class Prospect(Base):
     persona_map = Column(Text, nullable=True) 
     messages = Column(Text, nullable=True)
     sequence_plan = Column(Text, nullable=True)
+
+    # Module 6: Sequence Lifecycle Tracking
+    # Possible values: None (not yet drafted), "DRAFTED", "APPROVED"
+    outreach_status = Column(String, nullable=True, default=None)
     
     # AI recommendations and checks
     compliance_status = Column(String, nullable=True)

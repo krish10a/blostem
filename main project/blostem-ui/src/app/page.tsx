@@ -39,12 +39,23 @@ export default function Home() {
               Blostem AI Marketing Automation
             </h1>
             <p className="text-zinc-500 dark:text-zinc-400 mt-2">
-              Enterprise Prospect Intake & Signal Intelligence
+              Enterprise Prospect Intake &amp; Signal Intelligence
             </p>
           </div>
-          <button onClick={fetchProspects} className="text-sm px-4 py-2 border border-zinc-200 rounded-md bg-white hover:bg-zinc-100 dark:bg-zinc-900 dark:border-zinc-800 dark:hover:bg-zinc-800 transition">
-            Refresh Data
-          </button>
+          <div className="flex gap-3 items-center">
+            <a
+              href="http://127.0.0.1:8000/prospects/export"
+              target="_blank"
+              rel="noopener noreferrer"
+              className="text-sm px-4 py-2 border border-emerald-600 rounded-md bg-emerald-50 text-emerald-700 hover:bg-emerald-100 dark:bg-emerald-900/30 dark:border-emerald-700 dark:text-emerald-400 dark:hover:bg-emerald-900/50 transition font-medium"
+              title="Downloads blostem_export.xlsx with approved accounts and sequences"
+            >
+              ⬇ Export Approved (.xlsx)
+            </a>
+            <button onClick={fetchProspects} className="text-sm px-4 py-2 border border-zinc-200 rounded-md bg-white hover:bg-zinc-100 dark:bg-zinc-900 dark:border-zinc-800 dark:hover:bg-zinc-800 transition">
+              Refresh Data
+            </button>
+          </div>
         </div>
       </header>
 
@@ -90,7 +101,12 @@ export default function Home() {
                     <CardHeader className="pb-2">
                       <div className="flex justify-between items-start">
                         <CardTitle className="text-lg">{p.company_name}</CardTitle>
-                        <div className="flex gap-2 items-center">
+                        <div className="flex gap-2 items-center flex-wrap">
+                          {p.outreach_status === "APPROVED" && (
+                            <span className="inline-flex items-center rounded-full bg-emerald-50 px-2 py-1 text-xs font-bold text-emerald-700 ring-1 ring-inset ring-emerald-600/20" title="Sequence Approved">
+                              ✓ Approved
+                            </span>
+                          )}
                           {p.priority_score !== null && (
                             <span className="inline-flex items-center rounded-md bg-blue-50 px-2 py-1 text-xs font-bold text-blue-700 ring-1 ring-inset ring-blue-600/20 shadow-sm" title="Priority Score">
                               ★ {p.priority_score}/100

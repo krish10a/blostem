@@ -23,6 +23,7 @@ class ProspectUpdate(BaseModel):
     sequence_plan: Optional[str] = None
     compliance_status: Optional[str] = None
     next_action: Optional[str] = None
+    outreach_status: Optional[str] = None
 
 class ProspectResponse(ProspectBase):
     id: int
@@ -37,11 +38,17 @@ class ProspectResponse(ProspectBase):
     sequence_plan: Optional[str] = None
     compliance_status: Optional[str] = None
     next_action: Optional[str] = None
+    outreach_status: Optional[str] = None
     created_at: datetime
     updated_at: datetime
 
     class Config:
         from_attributes = True
+
+class ApproveSequenceRequest(BaseModel):
+    """Request body for approving or un-approving a sequence."""
+    approve: bool = True
+
 
 class SignalGenerationRequest(BaseModel):
     manual_context: str

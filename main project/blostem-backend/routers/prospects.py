@@ -1,8 +1,14 @@
 import csv
 import io
+import json
 from fastapi import APIRouter, Depends, UploadFile, File, HTTPException
+from fastapi.responses import StreamingResponse
 from sqlalchemy.orm import Session
 from typing import List
+
+import openpyxl
+from openpyxl.styles import Font, PatternFill, Alignment
+from openpyxl.utils import get_column_letter
 
 from database import get_db
 import models, schemas
@@ -184,6 +190,8 @@ def generate_outreach(prospect_id: int, db: Session = Depends(get_db)):
         )
         
         prospect.messages = json.dumps(outreach_data)
+        # Mark as DRAFTED when new sequences are generated (resets approval if re-generated)
+        prospect.outreach_status = "DRAFTED"
         
         db.commit()
         db.refresh(prospect)
@@ -192,3 +200,157 @@ def generate_outreach(prospect_id: int, db: Session = Depends(get_db)):
         import traceback
         traceback.print_exc()
         raise HTTPException(status_code=500, detail=str(e))
+
+
+# ─────────────────────────────────────────────
+# MODULE 6: Sequence Approval & Export
+# ─────────────────────────────────────────────
+
+@router.post("/{prospect_id}/approve", response_model=schemas.ProspectResponse)
+def approve_sequence(prospect_id: int, request: schemas.ApproveSequenceRequest, db: Session = Depends(get_db)):
+    """
+    Toggle the outreach sequence approval status for a prospect.
+    Sets outreach_status to 'APPROVED' or reverts to 'DRAFTED'.
+    """
+    prospect = db.query(models.Prospect).filter(models.Prospect.id == prospect_id).first()
+    if not prospect:
+        raise HTTPException(status_code=404, detail="Prospect not found")
+
+    if not prospect.messages:
+        raise HTTPException(
+            status_code=400,
+            detail="No outreach sequences found for this prospect. Generate sequences first."
+        )
+
+    prospect.outreach_status = "APPROVED" if request.approve else "DRAFTED"
+    db.commit()
+    db.refresh(prospect)
+    return prospect
+
+
+@router.get("/export")
+def export_approved_sequences(db: Session = Depends(get_db)):
+    """
+    Export all APPROVED prospects to a professional blostem_export.xlsx workbook.
+    Sheet 1 (accounts): One row per approved company/account.
+    Sheet 2 (sequences): One row per outreach step (email/LinkedIn message).
+    """
+    approved = db.query(models.Prospect).filter(models.Prospect.outreach_status == "APPROVED").all()
+
+    if not approved:
+        raise HTTPException(
+            status_code=404,
+            detail="No approved sequences found. Approve at least one prospect's outreach sequence first."
+        )
+
+    wb = openpyxl.Workbook()
+
+    # ── STYLE HELPERS ────────────────────────────────────────────────────────
+    HEADER_FILL = PatternFill("solid", fgColor="1E293B")   # dark slate
+    HEADER_FONT = Font(bold=True, color="FFFFFF", name="Calibri", size=11)
+    SUBROW_FONT = Font(name="Calibri", size=10)
+    CENTER = Alignment(horizontal="center", vertical="center", wrap_text=True)
+    LEFT = Alignment(horizontal="left", vertical="top", wrap_text=True)
+
+    def style_header_row(ws, headers: list[str]):
+        for col_idx, h in enumerate(headers, start=1):
+            cell = ws.cell(row=1, column=col_idx, value=h)
+            cell.fill = HEADER_FILL
+            cell.font = HEADER_FONT
+            cell.alignment = CENTER
+        ws.row_dimensions[1].height = 22
+
+    def auto_width(ws, min_w=12, max_w=60):
+        for col in ws.columns:
+            max_len = 0
+            col_letter = get_column_letter(col[0].column)
+            for cell in col:
+                if cell.value:
+                    max_len = max(max_len, len(str(cell.value)))
+            ws.column_dimensions[col_letter].width = min(max(max_len + 2, min_w), max_w)
+
+    # ── SHEET 1: ACCOUNTS ────────────────────────────────────────────────────
+    ws_accounts = wb.active
+    ws_accounts.title = "accounts"
+    acc_headers = [
+        "Company", "Website", "Industry", "Size",
+        "Fit Score", "Intent Score", "Priority Score", "Confidence Score",
+        "Personas Mapped", "Outreach Status", "Notes"
+    ]
+    style_header_row(ws_accounts, acc_headers)
+
+    for row_idx, p in enumerate(approved, start=2):
+        persona_count = 0
+        if p.persona_map:
+            try:
+                pm = json.loads(p.persona_map)
+                persona_count = len(pm.get("personas", []))
+            except Exception:
+                pass
+
+        short_explanation = ""
+        if p.score_explanation:
+            short_explanation = p.score_explanation.split("\n")[0][:120]
+
+        row_data = [
+            p.company_name, p.website or "", p.industry or "", p.size or "",
+            p.fit_score, p.intent_score, p.priority_score, p.confidence_score,
+            persona_count, p.outreach_status or "", short_explanation
+        ]
+        for col_idx, val in enumerate(row_data, start=1):
+            cell = ws_accounts.cell(row=row_idx, column=col_idx, value=val)
+            cell.font = SUBROW_FONT
+            cell.alignment = LEFT
+        ws_accounts.row_dimensions[row_idx].height = 18
+
+    auto_width(ws_accounts)
+
+    # ── SHEET 2: SEQUENCES ──────────────────────────────────────────────────
+    ws_seq = wb.create_sheet(title="sequences")
+    seq_headers = [
+        "Company", "Industry", "Persona Name", "Channel", "Subject / Note", "Body"
+    ]
+    style_header_row(ws_seq, seq_headers)
+
+    seq_row = 2
+    for p in approved:
+        if not p.messages:
+            continue
+        try:
+            msg_data = json.loads(p.messages)
+            outreach_payload = msg_data.get("outreach_payload", [])
+        except Exception:
+            continue
+
+        for persona in outreach_payload:
+            persona_name = persona.get("persona_name", "Unknown Persona")
+            for msg in persona.get("messages", []):
+                row_data = [
+                    p.company_name,
+                    p.industry or "",
+                    persona_name,
+                    msg.get("channel", ""),
+                    msg.get("subject", ""),
+                    msg.get("body", "")
+                ]
+                for col_idx, val in enumerate(row_data, start=1):
+                    cell = ws_seq.cell(row=seq_row, column=col_idx, value=val)
+                    cell.font = SUBROW_FONT
+                    cell.alignment = LEFT
+                ws_seq.row_dimensions[seq_row].height = 60  # taller for body text
+                seq_row += 1
+
+    auto_width(ws_seq)
+    # Body column (F=6) should be wide for readability
+    ws_seq.column_dimensions["F"].width = 80
+
+    # ── STREAM RESPONSE ─────────────────────────────────────────────────────
+    output = io.BytesIO()
+    wb.save(output)
+    output.seek(0)
+
+    return StreamingResponse(
+        output,
+        media_type="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
+        headers={"Content-Disposition": "attachment; filename=blostem_export.xlsx"}
+    )

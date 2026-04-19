@@ -1,7 +1,7 @@
 "use client";
 
 import { useState } from 'react';
-import { Mail, Share2, Sparkles, Building2, Send, Copy, AlertCircle } from 'lucide-react';
+import { Mail, Share2, Sparkles, Building2, Send, Copy, AlertCircle, CheckCircle2, RotateCcw } from 'lucide-react';
 
 interface OutreachMessage {
   channel: string;
@@ -25,6 +25,7 @@ interface Prospect {
   signals?: string;
   persona_map?: string;
   messages?: string; // Contains OutreachGenerationOutput JSON
+  outreach_status?: string; // null | "DRAFTED" | "APPROVED"
 }
 
 interface OutreachGenerationPanelProps {
@@ -34,10 +35,14 @@ interface OutreachGenerationPanelProps {
 
 export default function OutreachGenerationPanel({ prospect, onUpdate }: OutreachGenerationPanelProps) {
   const [isGenerating, setIsGenerating] = useState(false);
+  const [isApproving, setIsApproving] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [activePersonaTab, setActivePersonaTab] = useState<number>(0);
+  const [copiedIdx, setCopiedIdx] = useState<string | null>(null);
 
   const hasOutreach = !!prospect.messages;
+  const isApproved = prospect.outreach_status === "APPROVED";
+  const isDrafted = prospect.outreach_status === "DRAFTED";
   
   let outreachPayload: PersonaOutreach[] = [];
   if (hasOutreach) {
@@ -68,9 +73,31 @@ export default function OutreachGenerationPanel({ prospect, onUpdate }: Outreach
     }
   };
 
-  const copyToClipboard = (text: string) => {
+  const handleApprove = async (approve: boolean) => {
+    setIsApproving(true);
+    setError(null);
+    try {
+      const resp = await fetch(`http://127.0.0.1:8000/prospects/${prospect.id}/approve`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ approve }),
+      });
+      if (!resp.ok) {
+        const errData = await resp.json();
+        throw new Error(errData.detail || 'Failed to update approval status');
+      }
+      onUpdate();
+    } catch (err: any) {
+      setError(err.message);
+    } finally {
+      setIsApproving(false);
+    }
+  };
+
+  const copyToClipboard = (text: string, key: string) => {
     navigator.clipboard.writeText(text);
-    // Could add a toast notification here
+    setCopiedIdx(key);
+    setTimeout(() => setCopiedIdx(null), 2000);
   };
 
   if (!prospect.persona_map) {
@@ -91,51 +118,98 @@ export default function OutreachGenerationPanel({ prospect, onUpdate }: Outreach
 
   return (
     <div className="mt-8 rounded-xl border border-white/10 bg-linear-to-b from-black/40 to-black/20 p-6 backdrop-blur-md">
-      <div className="mb-6 flex items-center justify-between">
+      <div className="mb-6 flex items-center justify-between flex-wrap gap-4">
         <div>
           <h2 className="flex items-center text-xl font-bold text-white">
             <Send className="mr-2 h-5 w-5 text-indigo-400" />
             Hyper-Personalized Outreach
+            {/* Status badge */}
+            {isApproved && (
+              <span className="ml-3 inline-flex items-center gap-1.5 rounded-full bg-emerald-500/20 px-2.5 py-0.5 text-xs font-semibold text-emerald-400 ring-1 ring-emerald-500/30">
+                <CheckCircle2 className="h-3 w-3" /> Approved
+              </span>
+            )}
+            {isDrafted && !isApproved && (
+              <span className="ml-3 inline-flex items-center gap-1 rounded-full bg-amber-500/20 px-2.5 py-0.5 text-xs font-semibold text-amber-400 ring-1 ring-amber-500/30">
+                Draft
+              </span>
+            )}
           </h2>
           <p className="mt-1 text-sm text-zinc-400">
             AI-crafted sales sequences tailored to exact persona pain points for {prospect.company_name}.
           </p>
         </div>
         
-        {!hasOutreach ? (
-          <button
-            onClick={handleGenerateOutreach}
-            disabled={isGenerating}
-            className="flex items-center gap-2 rounded-lg bg-indigo-600 px-4 py-2 text-sm font-medium text-white transition-all hover:bg-indigo-500 disabled:opacity-50"
-          >
-            {isGenerating ? (
-              <>
-                <Sparkles className="h-4 w-4 animate-spin" />
-                Drafting Sequences...
-              </>
+        <div className="flex items-center gap-3">
+          {/* Approve / Un-approve button */}
+          {hasOutreach && (
+            isApproved ? (
+              <button
+                onClick={() => handleApprove(false)}
+                disabled={isApproving}
+                className="flex items-center gap-2 rounded-lg border border-emerald-500/30 bg-emerald-500/10 px-4 py-2 text-sm font-medium text-emerald-400 transition-all hover:bg-red-500/10 hover:border-red-500/30 hover:text-red-400 disabled:opacity-50"
+                title="Un-approve this sequence"
+              >
+                <RotateCcw className="h-4 w-4" />
+                {isApproving ? 'Updating...' : 'Revoke Approval'}
+              </button>
             ) : (
-              <>
-                <Sparkles className="h-4 w-4" />
-                Draft Personalized Outreach
-              </>
-            )}
-          </button>
-        ) : (
-          <button
-            onClick={handleGenerateOutreach}
-            disabled={isGenerating}
-            className="flex items-center gap-2 rounded-lg border border-white/10 bg-white/5 px-4 py-2 text-sm font-medium text-white transition-all hover:bg-white/10 disabled:opacity-50"
-          >
-            {isGenerating ? <Sparkles className="h-4 w-4 animate-spin" /> : <Sparkles className="h-4 w-4" />}
-            Refresh Sequences
-          </button>
-        )}
+              <button
+                onClick={() => handleApprove(true)}
+                disabled={isApproving}
+                className="flex items-center gap-2 rounded-lg bg-emerald-600 px-4 py-2 text-sm font-medium text-white transition-all hover:bg-emerald-500 disabled:opacity-50"
+              >
+                <CheckCircle2 className="h-4 w-4" />
+                {isApproving ? 'Approving...' : 'Approve Sequence'}
+              </button>
+            )
+          )}
+
+          {/* Generate / Refresh button */}
+          {!hasOutreach ? (
+            <button
+              onClick={handleGenerateOutreach}
+              disabled={isGenerating}
+              className="flex items-center gap-2 rounded-lg bg-indigo-600 px-4 py-2 text-sm font-medium text-white transition-all hover:bg-indigo-500 disabled:opacity-50"
+            >
+              {isGenerating ? (
+                <>
+                  <Sparkles className="h-4 w-4 animate-spin" />
+                  Drafting Sequences...
+                </>
+              ) : (
+                <>
+                  <Sparkles className="h-4 w-4" />
+                  Draft Personalized Outreach
+                </>
+              )}
+            </button>
+          ) : (
+            <button
+              onClick={handleGenerateOutreach}
+              disabled={isGenerating}
+              className="flex items-center gap-2 rounded-lg border border-white/10 bg-white/5 px-4 py-2 text-sm font-medium text-white transition-all hover:bg-white/10 disabled:opacity-50"
+              title={isApproved ? "Re-generating will reset Approved status to Draft" : ""}
+            >
+              {isGenerating ? <Sparkles className="h-4 w-4 animate-spin" /> : <Sparkles className="h-4 w-4" />}
+              Refresh Sequences
+            </button>
+          )}
+        </div>
       </div>
 
       {error && (
         <div className="mb-6 rounded-lg bg-red-500/10 p-4 text-sm text-red-400 flex items-start gap-3">
            <AlertCircle className="h-5 w-5 shrink-0" />
            <p>{error}</p>
+        </div>
+      )}
+
+      {/* Approval notice */}
+      {isApproved && (
+        <div className="mb-6 rounded-lg bg-emerald-500/10 border border-emerald-500/20 p-3 text-sm text-emerald-400 flex items-center gap-2">
+          <CheckCircle2 className="h-4 w-4 shrink-0" />
+          This sequence is approved and will be included in the next Export (.xlsx).
         </div>
       )}
 
@@ -164,6 +238,7 @@ export default function OutreachGenerationPanel({ prospect, onUpdate }: Outreach
           <div className="md:col-span-3 flex flex-col gap-4">
             {outreachPayload[activePersonaTab].messages.map((msg, msgIdx) => {
               const isLinkedIn = msg.channel.toLowerCase().includes('linkedin');
+              const copyKey = `${activePersonaTab}-${msgIdx}`;
               return (
                 <div key={msgIdx} className="rounded-lg border border-white/10 bg-black/40 overflow-hidden">
                   <div className="flex items-center justify-between border-b border-white/10 bg-white/5 px-4 py-2">
@@ -172,11 +247,15 @@ export default function OutreachGenerationPanel({ prospect, onUpdate }: Outreach
                       {msg.channel}
                     </span>
                     <button 
-                      onClick={() => copyToClipboard(msg.body)}
+                      onClick={() => copyToClipboard(msg.body, copyKey)}
                       className="text-zinc-500 hover:text-white transition-colors"
-                      title="Copy to clipboard"
+                      title="Copy body to clipboard"
                     >
-                      <Copy className="h-4 w-4" />
+                      {copiedIdx === copyKey ? (
+                        <CheckCircle2 className="h-4 w-4 text-emerald-400" />
+                      ) : (
+                        <Copy className="h-4 w-4" />
+                      )}
                     </button>
                   </div>
                   
