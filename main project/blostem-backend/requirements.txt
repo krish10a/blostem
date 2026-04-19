@@ -4,5 +4,8 @@ sqlalchemy
 pydantic
 pydantic-settings
 python-dotenv
-google-generativeai
+google-genai
 openpyxl
+python-multipart
+aiofiles
+openai

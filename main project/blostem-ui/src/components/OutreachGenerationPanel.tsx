@@ -1,7 +1,8 @@
 "use client";
 
 import { useState } from 'react';
-import { Mail, Share2, Sparkles, Building2, Send, Copy, AlertCircle, CheckCircle2, RotateCcw } from 'lucide-react';
+import { Mail, Share2, Sparkles, Building2, Send, Copy, AlertCircle, CheckCircle2, RotateCcw, Calendar } from 'lucide-react';
+import SequenceTimeline from './SequenceTimeline';
 
 interface OutreachMessage {
   channel: string;
@@ -21,10 +22,11 @@ interface OutreachGenerationOutput {
 interface Prospect {
   id: number;
   company_name: string;
-  industry: string;
+  industry?: string;
   signals?: string;
   persona_map?: string;
   messages?: string; // Contains OutreachGenerationOutput JSON
+  sequence_plan?: string; // Module 7: Full timeline JSON
   outreach_status?: string; // null | "DRAFTED" | "APPROVED"
 }
 
@@ -212,6 +214,8 @@ export default function OutreachGenerationPanel({ prospect, onUpdate }: Outreach
           This sequence is approved and will be included in the next Export (.xlsx).
         </div>
       )}
+
+
 
       {hasOutreach && outreachPayload.length > 0 && (
         <div className="grid grid-cols-1 md:grid-cols-4 gap-6">

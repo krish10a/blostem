@@ -1,72 +1,52 @@
 # Current Project State: Blostem AI Marketing Automation MVP
+# Last Updated: 2026-04-19
 
 ## Overarching Goal
 Build a functional MVP for enterprise B2B marketing automation using a zero-hallucination, step-by-step approach.
 
+## Branch
+- GitHub: https://github.com/krish10a/blostem.git (branch: b1)
+
 ## Modules Status
-*   **Module 1: Prospect Intake**: COMPLETED. Manual + CSV ingestion. `prospects` SQLite table defined.
-*   **Module 2: Core Prospect UI Dashboard**: COMPLETED. Glassmorphic React dashboard (`page.tsx`) running on Next.js communicating with FastAPI.
-*   **Module 3: Signal Intelligence Gen AI Module**: COMPLETED. Automated background research using `gemini-2.5-flash`. Saving structured JSON outputs to database.
-*   **Module 4: Persona Mapping**: COMPLETED. AI generation of targeted stakeholder pain points and pitch angles from Signals.
-*   **Module 5: Hyper-Personalized Outreach**: COMPLETED. Deeply personalized email + LinkedIn sequences per persona. Uses `[Prospect Name]` / `[Your Name]` placeholders and professional paragraph formatting.
-*   **Module 6: Sequence Review & Export Pipeline**: COMPLETED. Approval workflow + professional XLSX export.
-    *   Added `outreach_status` column to DB (`None` → `DRAFTED` → `APPROVED`).
-    *   `POST /prospects/{id}/approve` to toggle approval status.
-    *   `GET /prospects/export` streams `blostem_export.xlsx` with 2 sheets:
-        - **Sheet 1 (accounts)**: One row per approved company with all scores & persona count.
-        - **Sheet 2 (sequences)**: One row per outreach step (Company, Persona, Channel, Subject, Body).
-    *   Frontend shows "Approve Sequence" / "Revoke Approval" button with status badge.
-    *   "Export Approved (.xlsx)" button in the header bar links directly to the export endpoint.
+
+### ✅ COMPLETED
+
+- **Module 1: Prospect Intake** — Manual entry (ProspectIntakeForm.tsx) + CSV bulk upload (ProspectCSVUpload.tsx with fuzzy header mapping). `prospects` table in SQLite. CRUD endpoints live.
+- **Module 2: Signal Intelligence** — AI-powered signal analysis via `generate_prospect_signals()` in ai_service.py using gemini-2.0-flash. Stores signal_summary, reason_tags, raw_notes. Frontend: SignalIntelligencePanel.tsx.
+- **Module 3: Lead Scoring** — Weighted scoring model (fintech 30%, growth 25%, fit 20%, hiring 15%, recency 10%) via `generate_lead_score()`. Produces fit_score, intent_score, priority_score, confidence_score.
+- **Module 4: Persona Mapping** — AI stakeholder mapping via `generate_persona_mapping()`. Identifies 3 decision-maker personas with pain_points, objections, pitch_angle, message_tone, CTA style. Frontend: PersonaMappingPanel.tsx.
+- **Module 5: Outreach Generation** — Hyper-personalized outreach sequences via `generate_outreach_sequence()`. 3 messages/persona (email initial, follow-up, LinkedIn). Compliance rules embedded in prompt. Frontend: OutreachGenerationPanel.tsx.
+- **Module 6: Compliance & Approval** — Built into outreach prompt (no separate LLM call). Auto-marks compliance_status=APPROVED. Approve button in frontend toggling outreach_status DRAFTED↔APPROVED.
+- **Module 7: Sequence Builder** — Multi-day staggered timeline via `generate_sequence_timeline()`. Triggered on approval. Stores sequence_plan JSON. Frontend: SequenceTimeline.tsx with sequential day-by-day unlock logic.
+- **Module 8: Sales Action Recommendation** — Auto-triggered at end of outreach generation via `generate_next_action()`. Outputs action, reason, suggested_owner, suggested_timing, priority_label. Frontend: SalesActionPanel.tsx.
+- **Module 9: Analytics Dashboard** — `/prospects/analytics` endpoint. 6 stat cards + Recharts bar chart + priority leaderboard. Frontend: AnalyticsDashboard.tsx.
+- **Module 10: Export & Integration** — `/prospects/export` (APPROVED only) and `/prospects/export-all` (all prospects). 3-sheet XLSX: accounts summary, sequences, compliance. Frontend export buttons in dashboard header.
 
 ## API Endpoints (http://127.0.0.1:8000)
-*   `POST /prospects/`: Create a single prospect
-*   `POST /prospects/upload/`: Upload CSV of multiple prospects
-*   `GET /prospects/`: List all prospects
-*   `POST /prospects/{prospect_id}/generate-signals`: Trigger Signal Intelligence
-*   `POST /prospects/{prospect_id}/score`: Trigger Lead Scoring
-*   `POST /prospects/{prospect_id}/map-personas`: Trigger Persona Mapping
-*   `POST /prospects/{prospect_id}/generate-outreach`: Trigger Outreach Draft Generation (sets status to DRAFTED)
-*   `POST /prospects/{prospect_id}/approve`: Approve or revoke approval (`{ "approve": true/false }`)
-*   `GET /prospects/export`: Download `blostem_export.xlsx` for all APPROVED prospects
+- **CRUD**: GET /prospects/, POST /prospects/, POST /prospects/upload/, DELETE /prospects/{id}
+- **AI Pipeline**: POST /prospects/{id}/generate-signals → /score → /map-personas → /generate-outreach
+- **Approval**: POST /prospects/{id}/approve
+- **Analytics**: GET /prospects/analytics
+- **Export**: GET /prospects/export, GET /prospects/export-all
 
-## Data Model: Prospect Table (SQLite)
-| Field | Type | Description |
-|---|---|---|
-| id | Integer PK | |
-| company_name | String | |
-| website | String | |
-| industry | String | |
-| size | String | |
-| signals | Text JSON | AI signal output |
-| fit_score | Float | |
-| intent_score | Float | |
-| priority_score | Float | |
-| confidence_score | Float | |
-| score_explanation | Text | |
-| persona_map | Text JSON | |
-| messages | Text JSON | OutreachGenerationOutput |
-| sequence_plan | Text | |
-| outreach_status | String | None / DRAFTED / APPROVED |
-| compliance_status | String | |
-| next_action | String | |
-| created_at | DateTime | |
-| updated_at | DateTime | |
+## AI Stack
+- **Primary**: gemini-2.0-flash with 4-key rotation
+- **Fallback**: Local Ollama (gemma2)
+- **JSON Extraction**: Custom _clean_json() with markdown/regex stripping
 
-## Pydantic Schemas
-*   `ProspectCreate`, `ProspectResponse`, `ProspectUpdate`: Core CRUD
-*   `ApproveSequenceRequest`: `{ approve: bool }` for the approval endpoint
-*   `SignalsOutput`, `ScoringOutput`, `PersonaMapOutput`, `OutreachGenerationOutput`: AI structured outputs
+## Tech Stack
+- **Backend**: FastAPI, SQLAlchemy, SQLite, openpyxl, Google GenAI SDK
+- **Frontend**: Next.js 15+, React 19, Tailwind CSS v4, Recharts, Lucide Icons
+- **Source Control**: Branch `b1` on https://github.com/krish10a/blostem.git
 
-## Tech Stack Environment
-*   **Backend**: FastAPI, SQLite (`blostem.db`), Pydantic, Uvicorn, Google GenAI SDK (`gemini-2.5-flash`), openpyxl.
-*   **Frontend**: Next.js 16 (Turbopack), React 19, Tailwind CSS v4, Lucide Icons.
-*   **Git**: Branch `b1` on `https://github.com/krish10a/blostem.git`
+## Constraints (Ground Truth)
+- NO automated sending (manual review required)
+- NO CRM integrations (XLSX handover only)
+- NO browser scraping
 
-## Constraints (from blostem_brain.md — NEVER VIOLATE)
-*   NO automated email sending (we draft sequences only)
-*   NO CRM integration (Salesforce/HubSpot)
-*   NO browser scraping (Playwright/Puppeteer)
-*   NO heavy ML models — rule-based + Gemini API only
-
-## Next Module Focus
-Module 7 or final polish — TBD by user.
+## What Remains (Post-MVP Polish)
+- README.md with demo story, setup instructions, architecture diagram
+- Demo dataset / sample CSV
+- Final UI polish / branding pass
+- Architecture diagram image
+- Demo video / live demo script

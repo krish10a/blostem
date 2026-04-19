@@ -3,18 +3,21 @@
 import { useState } from "react";
 import { Card, CardHeader, CardTitle, CardContent, CardDescription } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
+import { AlertCircle } from "lucide-react";
 
 type Props = {
-  prospect: any; // We'll type this properly later
+  prospect: any;
   onPersonasGenerated?: (prospect: any) => void;
 };
 
 export default function PersonaMappingPanel({ prospect, onPersonasGenerated }: Props) {
   const [loading, setLoading] = useState(false);
+  const [error, setError] = useState<string | null>(null);
 
   const handleGenerate = async () => {
     if (!prospect?.id) return;
     setLoading(true);
+    setError(null);
 
     try {
       const res = await fetch(`http://127.0.0.1:8000/prospects/${prospect.id}/map-personas`, {
@@ -22,21 +25,24 @@ export default function PersonaMappingPanel({ prospect, onPersonasGenerated }: P
       });
       if (res.ok) {
         const updatedProspect = await res.json();
-        alert("Personas mapped successfully!");
         if (onPersonasGenerated) onPersonasGenerated(updatedProspect);
       } else {
         const data = await res.json();
-        alert(`Error: ${data.detail || 'Failed to map personas'}`);
+        setError(data.detail || "Failed to map personas");
       }
-    } catch (error) {
-      console.error(error);
-      alert("Failed to connect to the backend.");
+    } catch (err) {
+      setError("Failed to connect to the backend.");
     } finally {
       setLoading(false);
     }
   };
 
-  const parsedMapping = prospect?.persona_map ? JSON.parse(prospect.persona_map) : null;
+  let parsedMapping = null;
+  try {
+    parsedMapping = prospect?.persona_map ? JSON.parse(prospect.persona_map) : null;
+  } catch {
+    parsedMapping = null;
+  }
   const personas = parsedMapping?.personas || [];
 
   return (
@@ -47,28 +53,46 @@ export default function PersonaMappingPanel({ prospect, onPersonasGenerated }: P
           Identify key decision-makers and generate role-specific pitch angles.
         </CardDescription>
       </CardHeader>
-      
+
+      {error && (
+        <div className="mx-6 mb-2 flex items-start gap-2 rounded-lg bg-red-50 dark:bg-red-900/20 border border-red-200 dark:border-red-800 p-3 text-xs text-red-700 dark:text-red-400">
+          <AlertCircle className="h-4 w-4 shrink-0 mt-0.5" />
+          {error}
+        </div>
+      )}
+
       {!parsedMapping ? (
         <CardContent className="flex flex-col items-center justify-center p-8 border-t border-zinc-100 dark:border-zinc-800">
           <p className="text-sm text-zinc-500 text-center mb-6 max-w-sm">
-            Map out 3-5 key personas directly relevant to the extracted signals for {prospect?.company_name || 'this account'}.
+            Map out 3-5 key personas directly relevant to the extracted signals for {prospect?.company_name || "this account"}.
           </p>
-          <Button onClick={handleGenerate} disabled={loading || !prospect.signals} className="w-full sm:w-auto bg-indigo-600 hover:bg-indigo-700 text-white">
-            {loading ? "Mapping Personas..." : prospect.signals ? "Identify Key Stakeholders" : "Generate Signals First"}
+          <Button
+            onClick={handleGenerate}
+            disabled={loading || !prospect.signals}
+            className="w-full sm:w-auto bg-indigo-600 hover:bg-indigo-700 text-white"
+          >
+            {loading
+              ? "Mapping Personas..."
+              : prospect.signals
+              ? "Identify Key Stakeholders"
+              : "Generate Signals First"}
           </Button>
         </CardContent>
       ) : (
         <CardContent className="space-y-6">
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
             {personas.map((persona: any, idx: number) => (
-              <div key={idx} className="border border-zinc-200 dark:border-zinc-800 rounded-lg p-4 bg-white dark:bg-zinc-950/50 hover:shadow-md transition">
+              <div
+                key={idx}
+                className="border border-zinc-200 dark:border-zinc-800 rounded-lg p-4 bg-white dark:bg-zinc-950/50 hover:shadow-md transition"
+              >
                 <div className="flex items-center justify-between mb-2">
                   <h4 className="font-bold text-zinc-900 dark:text-zinc-50 text-sm">{persona.persona_name}</h4>
                   <span className="text-[10px] uppercase font-bold text-indigo-600 bg-indigo-50 px-2 py-1 rounded dark:bg-indigo-900/40 dark:text-indigo-400">
                     {persona.role}
                   </span>
                 </div>
-                
+
                 <div className="space-y-3 mt-4">
                   <div>
                     <h5 className="text-[11px] font-bold uppercase text-zinc-400">Pain Points</h5>
@@ -83,8 +107,12 @@ export default function PersonaMappingPanel({ prospect, onPersonasGenerated }: P
                     <p className="text-xs text-zinc-800 dark:text-zinc-200 font-medium mt-1">{persona.pitch_angle}</p>
                   </div>
                   <div className="flex justify-between border-t border-zinc-100 dark:border-zinc-800 pt-2 text-[11px]">
-                    <span className="text-zinc-500">Tone: <span className="font-semibold text-zinc-800 dark:text-zinc-200">{persona.message_tone}</span></span>
-                    <span className="text-zinc-500">CTA: <span className="font-semibold text-zinc-800 dark:text-zinc-200">{persona.call_to_action_style}</span></span>
+                    <span className="text-zinc-500">
+                      Tone: <span className="font-semibold text-zinc-800 dark:text-zinc-200">{persona.message_tone}</span>
+                    </span>
+                    <span className="text-zinc-500">
+                      CTA: <span className="font-semibold text-zinc-800 dark:text-zinc-200">{persona.call_to_action_style}</span>
+                    </span>
                   </div>
                 </div>
               </div>
