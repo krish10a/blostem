@@ -228,21 +228,8 @@ def approve_sequence(prospect_id: int, request: schemas.ApproveSequenceRequest, 
     return prospect
 
 
-@router.get("/export")
-def export_approved_sequences(db: Session = Depends(get_db)):
-    """
-    Export all APPROVED prospects to a professional blostem_export.xlsx workbook.
-    Sheet 1 (accounts): One row per approved company/account.
-    Sheet 2 (sequences): One row per outreach step (email/LinkedIn message).
-    """
-    approved = db.query(models.Prospect).filter(models.Prospect.outreach_status == "APPROVED").all()
-
-    if not approved:
-        raise HTTPException(
-            status_code=404,
-            detail="No approved sequences found. Approve at least one prospect's outreach sequence first."
-        )
-
+def generate_prospect_xlsx(prospects: List[models.Prospect]):
+    """Helper to generate a styled XLSX for a list of prospects."""
     wb = openpyxl.Workbook()
 
     # ── STYLE HELPERS ────────────────────────────────────────────────────────
@@ -263,6 +250,7 @@ def export_approved_sequences(db: Session = Depends(get_db)):
     def auto_width(ws, min_w=12, max_w=60):
         for col in ws.columns:
             max_len = 0
+            if not col: continue
             col_letter = get_column_letter(col[0].column)
             for cell in col:
                 if cell.value:
@@ -279,7 +267,7 @@ def export_approved_sequences(db: Session = Depends(get_db)):
     ]
     style_header_row(ws_accounts, acc_headers)
 
-    for row_idx, p in enumerate(approved, start=2):
+    for row_idx, p in enumerate(prospects, start=2):
         persona_count = 0
         if p.persona_map:
             try:
@@ -295,7 +283,7 @@ def export_approved_sequences(db: Session = Depends(get_db)):
         row_data = [
             p.company_name, p.website or "", p.industry or "", p.size or "",
             p.fit_score, p.intent_score, p.priority_score, p.confidence_score,
-            persona_count, p.outreach_status or "", short_explanation
+            persona_count, p.outreach_status or "NOT APPROVED", short_explanation
         ]
         for col_idx, val in enumerate(row_data, start=1):
             cell = ws_accounts.cell(row=row_idx, column=col_idx, value=val)
@@ -313,7 +301,7 @@ def export_approved_sequences(db: Session = Depends(get_db)):
     style_header_row(ws_seq, seq_headers)
 
     seq_row = 2
-    for p in approved:
+    for p in prospects:
         if not p.messages:
             continue
         try:
@@ -337,20 +325,41 @@ def export_approved_sequences(db: Session = Depends(get_db)):
                     cell = ws_seq.cell(row=seq_row, column=col_idx, value=val)
                     cell.font = SUBROW_FONT
                     cell.alignment = LEFT
-                ws_seq.row_dimensions[seq_row].height = 60  # taller for body text
+                ws_seq.row_dimensions[seq_row].height = 60
                 seq_row += 1
 
     auto_width(ws_seq)
-    # Body column (F=6) should be wide for readability
     ws_seq.column_dimensions["F"].width = 80
 
-    # ── STREAM RESPONSE ─────────────────────────────────────────────────────
     output = io.BytesIO()
     wb.save(output)
     output.seek(0)
+    return output
 
+@router.get("/export")
+def export_approved_sequences(db: Session = Depends(get_db)):
+    """Export all APPROVED prospects to XLSX."""
+    approved = db.query(models.Prospect).filter(models.Prospect.outreach_status == "APPROVED").all()
+    if not approved:
+        raise HTTPException(status_code=404, detail="No approved sequences found.")
+    
+    xlsx_data = generate_prospect_xlsx(approved)
     return StreamingResponse(
-        output,
+        xlsx_data,
         media_type="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
-        headers={"Content-Disposition": "attachment; filename=blostem_export.xlsx"}
+        headers={"Content-Disposition": 'attachment; filename="blostem_approved_export.xlsx"'}
+    )
+
+@router.get("/export-all")
+def export_all_prospects(db: Session = Depends(get_db)):
+    """Export all prospects to XLSX."""
+    all_prospects = db.query(models.Prospect).all()
+    if not all_prospects:
+        raise HTTPException(status_code=404, detail="No prospects found to export.")
+    
+    xlsx_data = generate_prospect_xlsx(all_prospects)
+    return StreamingResponse(
+        xlsx_data,
+        media_type="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
+        headers={"Content-Disposition": 'attachment; filename="blostem_full_export.xlsx"'}
     )

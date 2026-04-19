@@ -44,13 +44,22 @@ export default function Home() {
           </div>
           <div className="flex gap-3 items-center">
             <a
+              href="http://127.0.0.1:8000/prospects/export-all"
+              target="_blank"
+              rel="noopener noreferrer"
+              className="text-sm px-4 py-2 border border-blue-600 rounded-md bg-blue-50 text-blue-700 hover:bg-blue-100 dark:bg-blue-900/30 dark:border-blue-700 dark:text-blue-400 dark:hover:bg-blue-900/50 transition font-medium"
+              title="Downloads blostem_full_export.xlsx with ALL prospects (Pipeline Snapshot)"
+            >
+              ⬇ Export All (.xlsx)
+            </a>
+            <a
               href="http://127.0.0.1:8000/prospects/export"
               target="_blank"
               rel="noopener noreferrer"
-              className="text-sm px-4 py-2 border border-emerald-600 rounded-md bg-emerald-50 text-emerald-700 hover:bg-emerald-100 dark:bg-emerald-900/30 dark:border-emerald-700 dark:text-emerald-400 dark:hover:bg-emerald-900/50 transition font-medium"
-              title="Downloads blostem_export.xlsx with approved accounts and sequences"
+              className="text-sm px-4 py-2 border border-emerald-600 rounded-md bg-emerald-100 text-emerald-800 hover:bg-emerald-200 dark:bg-emerald-900/50 dark:border-emerald-700 dark:text-emerald-400 dark:hover:bg-emerald-900/70 transition font-bold shadow-sm"
+              title="Downloads blostem_approved_export.xlsx with only APPROVED sequences"
             >
-              ⬇ Export Approved (.xlsx)
+              ✅ Export Approved (.xlsx)
             </a>
             <button onClick={fetchProspects} className="text-sm px-4 py-2 border border-zinc-200 rounded-md bg-white hover:bg-zinc-100 dark:bg-zinc-900 dark:border-zinc-800 dark:hover:bg-zinc-800 transition">
               Refresh Data
@@ -174,6 +183,7 @@ export default function Home() {
             
             {selectedProspect && (
               <OutreachGenerationPanel
+                key={`outreach-${selectedProspect.id}`}
                 prospect={selectedProspect}
                 onUpdate={() => {
                   fetchProspects();

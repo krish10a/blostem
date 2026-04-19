@@ -236,7 +236,7 @@ export default function OutreachGenerationPanel({ prospect, onUpdate }: Outreach
 
           {/* Editor Column */}
           <div className="md:col-span-3 flex flex-col gap-4">
-            {outreachPayload[activePersonaTab].messages.map((msg, msgIdx) => {
+            {outreachPayload[activePersonaTab]?.messages?.map((msg, msgIdx) => {
               const isLinkedIn = msg.channel.toLowerCase().includes('linkedin');
               const copyKey = `${activePersonaTab}-${msgIdx}`;
               return (
