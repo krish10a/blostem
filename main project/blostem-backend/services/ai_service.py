@@ -27,12 +27,21 @@ MODEL_ID = "gemini-2.0-flash"
 OLLAMA_MODEL = os.getenv("OLLAMA_MODEL", "gemma2")
 OLLAMA_URL = "http://localhost:11434/api/generate"
 
-def get_clients():
-    if not GEMINI_KEYS:
-        raise ValueError("No GEMINI_API_KEYS configured in .env")
-    return [genai.Client(api_key=k) for k in GEMINI_KEYS]
+_clients_cache = None
 
-clients = get_clients()
+def get_clients():
+    """
+    Lazy-init Gemini clients so missing env keys don't crash app import/startup.
+    Returns an empty list when no keys are configured.
+    """
+    global _clients_cache
+    if _clients_cache is not None:
+        return _clients_cache
+    if not GEMINI_KEYS:
+        _clients_cache = []
+        return _clients_cache
+    _clients_cache = [genai.Client(api_key=k) for k in GEMINI_KEYS]
+    return _clients_cache
 
 def _clean_json(text: str) -> str:
     """Robustly extract JSON from text, handling model chatter."""
@@ -76,39 +85,42 @@ def _call_ollama(prompt: str, json_mode: bool = True):
 def _call_ai(prompt: str, json_mode: bool = True):
     """Retries with multiple Gemini API keys if quota/rate limits occur."""
     last_error = None
+    clients = get_clients()
     
-    # Try each API key in sequence (rotation fallback)
-    for i, client in enumerate(clients):
-        for attempt in range(2): # Try each key twice if it's a transient error
-            try:
-                print(f"DEBUG: Attempting Gemini call with Key {i+1} (Attempt {attempt+1})")
-                
-                # Gemini 1.0+ SDK call
-                response = client.models.generate_content(
-                    model=MODEL_ID,
-                    contents=prompt,
-                    config={
-                        'temperature': 0.1 if json_mode else 0.2,
-                        'response_mime_type': 'application/json' if json_mode else 'text/plain'
-                    }
-                )
-                
-                if not response or not response.text:
-                    raise ValueError("Gemini returned an empty response.")
+    # Try Gemini first when configured
+    if clients:
+        # Try each API key in sequence (rotation fallback)
+        for i, client in enumerate(clients):
+            for attempt in range(2): # Try each key twice if it's a transient error
+                try:
+                    print(f"DEBUG: Attempting Gemini call with Key {i+1} (Attempt {attempt+1})")
                     
-                return response.text
-                
-            except Exception as e:
-                last_error = e
-                err_msg = str(e).lower()
-                
-                # Check for rate limit / quota issues (ResourceExhausted or 429)
-                if "429" in err_msg or "quota" in err_msg or "exhausted" in err_msg or "rate_limit" in err_msg:
-                    print(f"WARNING: Key {i+1} rate-limited or quota exhausted. Switching to next key...")
-                    break # Break inner loop, move to next client
-                
-                print(f"ERROR: Key {i+1} failed with error: {str(e)[:100]}. Trying next fallback...")
-                break # Move to next key for any other error too
+                    # Gemini 1.0+ SDK call
+                    response = client.models.generate_content(
+                        model=MODEL_ID,
+                        contents=prompt,
+                        config={
+                            'temperature': 0.1 if json_mode else 0.2,
+                            'response_mime_type': 'application/json' if json_mode else 'text/plain'
+                        }
+                    )
+                    
+                    if not response or not response.text:
+                        raise ValueError("Gemini returned an empty response.")
+                        
+                    return response.text
+                    
+                except Exception as e:
+                    last_error = e
+                    err_msg = str(e).lower()
+                    
+                    # Check for rate limit / quota issues (ResourceExhausted or 429)
+                    if "429" in err_msg or "quota" in err_msg or "exhausted" in err_msg or "rate_limit" in err_msg:
+                        print(f"WARNING: Key {i+1} rate-limited or quota exhausted. Switching to next key...")
+                        break # Break inner loop, move to next client
+                    
+                    print(f"ERROR: Key {i+1} failed with error: {str(e)[:100]}. Trying next fallback...")
+                    break # Move to next key for any other error too
                 
     # Final Fallback to local Ollama
     print("WARNING: All Gemini API keys failed or were rate-limited. Falling back to local Ollama...")
@@ -156,20 +168,35 @@ def generate_lead_score(signals_json: str, company_name: str) -> dict:
     
     w_fintech, w_growth, w_fit, w_hiring, w_recency = 0.30, 0.25, 0.20, 0.15, 0.10
     priority_score = (sum(float(sub_scores.get(k, 0)) * w for k, w in zip(["fintech_relevance", "growth_signals", "product_fit", "hiring_activity", "recency_engagement"], [w_fintech, w_growth, w_fit, w_hiring, w_recency]))) * 10
-    
+
+    # Calculate confidence score from signal richness (not hardcoded)
+    try:
+        sig_data = json.loads(signals_json)
+        tag_count = len(sig_data.get("reason_tags", []))
+        raw_notes = sig_data.get("raw_notes", "")
+        note_bullet_count = raw_notes.count("- ") if raw_notes else 0
+        summary_words = len(sig_data.get("signal_summary", "").split())
+        confidence_score = round(min(45.0 + (tag_count * 5.0) + (note_bullet_count * 3.0) + (summary_words * 0.3), 97.0), 1)
+    except Exception:
+        confidence_score = 65.0
+
     return {
         "fit_score": round(((float(sub_scores.get("fintech_relevance", 0)) * 0.6) + (float(sub_scores.get("product_fit", 0)) * 0.4)) * 10, 1),
         "intent_score": round(((float(sub_scores.get("growth_signals", 0)) * 0.5) + (float(sub_scores.get("hiring_activity", 0)) * 0.3) + (float(sub_scores.get("recency_engagement", 0)) * 0.2)) * 10, 1),
         "priority_score": round(priority_score, 1),
-        "confidence_score": 100.0,
+        "confidence_score": confidence_score,
         "score_explanation": sub_scores.get("short_justification", "Analysis complete."),
         "short_justification": sub_scores.get("short_justification", "Analysis complete.")
     }
 
 def generate_persona_mapping(company_name: str, industry: str, signals_json: str) -> dict:
     prompt = (
-        f"Identify 3 decision-maker personas for {company_name}. Signals: {signals_json}. "
-        "Strictly return JSON with exactly one key 'personas', mapping to a list of objects. "
+        f"Identify exactly 5 decision-maker personas for {company_name} ({industry}). Signals: {signals_json}. "
+        "The 5 personas MUST cover these roles (adapt names to fit the company): "
+        "1) Founder or CEO, 2) Head of Product, 3) Head of Partnerships or BizDev, "
+        "4) Head of Growth or Marketing, 5) Compliance or Risk Lead. "
+        "If the company is technical, replace role 5 with Engineering or Tech Lead. "
+        "Strictly return JSON with exactly one key 'personas', mapping to a list of 5 objects. "
         "Each object MUST have these exact snake_case keys: "
         "persona_name, role, pain_points, objections, pitch_angle, message_tone, call_to_action_style."
     )
@@ -207,13 +234,20 @@ def generate_persona_mapping(company_name: str, industry: str, signals_json: str
 
 def generate_outreach_sequence(company_name: str, industry: str, signals_json: str, persona_map_json: str) -> dict:
     prompt = (
-        f"Write 3 personalized messages per persona for {company_name}. Content must be specific to: {signals_json} and {persona_map_json}. "
+        f"Write exactly 5 personalized sales messages per persona for {company_name} ({industry}). "
+        f"Tailor every message specifically to these signals: {signals_json} and these personas: {persona_map_json}. "
+        "The 5 messages MUST use EXACTLY these channels in order: "
+        "1) channel='Initial Email' — a formal first-touch introduction email (subject + 4-5 sentence body), "
+        "2) channel='Follow-up Email' — a follow-up to be sent 5-7 days later if no reply (subject + 3-4 sentence body), "
+        "3) channel='LinkedIn Note' — a short 2-3 line LinkedIn connection message (subject='LinkedIn Connection', body max 60 words), "
+        "4) channel='Call Script Summary' — a concise, bulleted script for a phone call (subject='Phone Script', body should include: opening, value-prop tie-in, and closing question), "
+        "5) channel='Internal Sales Note' — NOT for sending externally; a brief internal note for the sales rep summarizing the persona's pain point and specific reason for outreach (subject='Sales Rep Note', body 2-4 sentences). "
         "CRITICAL COMPLIANCE RULES: "
         "1. Do not use high-pressure sales tactics. "
         "2. Do not guarantee ROI or make definitive financial promises. "
         "3. Ensure the tone is consultative and professional. "
         "4. Avoid generic buzzwords; focus strictly on verifiable value propositions. "
-        "5. Messages must be optimized in length - not overly long to lose attention, but detailed enough to deliver value (approx 3-5 sentences). "
+        "5. Every message must feel tailor-made for the specific persona role and company context — not generic. "
         "Your generated outreach MUST comply with these rules. "
         "Strictly return JSON with exactly one key 'outreach_payload', mapping to a list of PersonaOutreach objects. "
         "Each PersonaOutreach object MUST have these exact keys: persona_name, messages. "

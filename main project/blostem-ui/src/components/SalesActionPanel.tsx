@@ -1,9 +1,8 @@
 "use client";
 
-import { useState } from "react";
 import {
   Zap, Clock, TrendingUp, UsersRound, ArrowRightCircle,
-  AlertCircle, Loader2
+  AlertCircle
 } from "lucide-react";
 
 interface NextAction {
@@ -21,7 +20,6 @@ interface Props {
     priority_score?: number | null;
     next_action?: string | null;
   };
-  onUpdate: () => void;
 }
 
 const ACTION_CONFIG: Record<string, { color: string; icon: React.ReactNode }> = {
@@ -32,7 +30,7 @@ const ACTION_CONFIG: Record<string, { color: string; icon: React.ReactNode }> = 
   "Deprioritize":    { color: "text-zinc-400 bg-zinc-500/10 border-zinc-500/30",          icon: <Clock className="h-4 w-4" /> },
 };
 
-export default function SalesActionPanel({ prospect, onUpdate }: Props) {
+export default function SalesActionPanel({ prospect }: Props) {
 
   const hasScore = prospect.priority_score !== null && prospect.priority_score !== undefined;
 
@@ -51,7 +49,7 @@ export default function SalesActionPanel({ prospect, onUpdate }: Props) {
   const cfg = actionDetail ? ACTION_CONFIG[actionDetail.action] : null;
 
   return (
-    <div className="mt-4 rounded-xl border border-white/10 bg-black/20 p-5 backdrop-blur-sm">
+    <div className="mouse-glow reveal haptic-hover animate-fade-in-up delay-100 mt-4 rounded-xl border border-white/10 bg-black/20 p-5 backdrop-blur-sm">
       <div className="flex items-center justify-between mb-4 flex-wrap gap-3">
         <div className="flex items-center gap-2">
           <ArrowRightCircle className="h-5 w-5 text-indigo-400" />

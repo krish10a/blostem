@@ -1,8 +1,7 @@
 "use client";
 
 import { useState } from 'react';
-import { Mail, Share2, Sparkles, Building2, Send, Copy, AlertCircle, CheckCircle2, RotateCcw, Calendar } from 'lucide-react';
-import SequenceTimeline from './SequenceTimeline';
+import { Mail, Share2, Sparkles, Building2, Send, Copy, AlertCircle, CheckCircle2, RotateCcw, Phone } from 'lucide-react';
 
 interface OutreachMessage {
   channel: string;
@@ -13,10 +12,6 @@ interface OutreachMessage {
 interface PersonaOutreach {
   persona_name: string;
   messages: OutreachMessage[];
-}
-
-interface OutreachGenerationOutput {
-  outreach_payload: PersonaOutreach[];
 }
 
 interface Prospect {
@@ -68,8 +63,8 @@ export default function OutreachGenerationPanel({ prospect, onUpdate }: Outreach
         throw new Error(errData.detail || 'Failed to generate outreach');
       }
       onUpdate();
-    } catch (err: any) {
-      setError(err.message);
+    } catch (err: unknown) {
+      setError(err instanceof Error ? err.message : "Failed to generate outreach");
     } finally {
       setIsGenerating(false);
     }
@@ -89,8 +84,8 @@ export default function OutreachGenerationPanel({ prospect, onUpdate }: Outreach
         throw new Error(errData.detail || 'Failed to update approval status');
       }
       onUpdate();
-    } catch (err: any) {
-      setError(err.message);
+    } catch (err: unknown) {
+      setError(err instanceof Error ? err.message : "Failed to update approval status");
     } finally {
       setIsApproving(false);
     }
@@ -119,7 +114,7 @@ export default function OutreachGenerationPanel({ prospect, onUpdate }: Outreach
   }
 
   return (
-    <div className="mt-8 rounded-xl border border-white/10 bg-linear-to-b from-black/40 to-black/20 p-6 backdrop-blur-md">
+    <div className="mouse-glow reveal animate-fade-in-up delay-100 mt-8 rounded-xl border border-white/10 bg-linear-to-b from-black/40 to-black/20 p-6 backdrop-blur-md">
       <div className="mb-6 flex items-center justify-between flex-wrap gap-4">
         <div>
           <h2 className="flex items-center text-xl font-bold text-white">
@@ -149,7 +144,7 @@ export default function OutreachGenerationPanel({ prospect, onUpdate }: Outreach
               <button
                 onClick={() => handleApprove(false)}
                 disabled={isApproving}
-                className="flex items-center gap-2 rounded-lg border border-emerald-500/30 bg-emerald-500/10 px-4 py-2 text-sm font-medium text-emerald-400 transition-all hover:bg-red-500/10 hover:border-red-500/30 hover:text-red-400 disabled:opacity-50"
+                className="haptic-hover btn-pipeline flex items-center gap-2 rounded-lg border border-emerald-500/30 bg-emerald-500/10 px-4 py-2 text-sm font-medium text-emerald-400 transition-all hover:bg-red-500/10 hover:border-red-500/30 hover:text-red-400 disabled:opacity-50"
                 title="Un-approve this sequence"
               >
                 <RotateCcw className="h-4 w-4" />
@@ -159,7 +154,7 @@ export default function OutreachGenerationPanel({ prospect, onUpdate }: Outreach
               <button
                 onClick={() => handleApprove(true)}
                 disabled={isApproving}
-                className="flex items-center gap-2 rounded-lg bg-emerald-600 px-4 py-2 text-sm font-medium text-white transition-all hover:bg-emerald-500 disabled:opacity-50"
+                className="haptic-hover btn-pipeline flex items-center gap-2 rounded-lg bg-emerald-600 px-4 py-2 text-sm font-medium text-white transition-all hover:bg-emerald-500 disabled:opacity-50"
               >
                 <CheckCircle2 className="h-4 w-4" />
                 {isApproving ? 'Approving...' : 'Approve Sequence'}
@@ -172,7 +167,7 @@ export default function OutreachGenerationPanel({ prospect, onUpdate }: Outreach
             <button
               onClick={handleGenerateOutreach}
               disabled={isGenerating}
-              className="flex items-center gap-2 rounded-lg bg-indigo-600 px-4 py-2 text-sm font-medium text-white transition-all hover:bg-indigo-500 disabled:opacity-50"
+              className="haptic-hover btn-pipeline flex items-center gap-2 rounded-lg bg-indigo-600 px-4 py-2 text-sm font-medium text-white transition-all hover:bg-indigo-500 disabled:opacity-50"
             >
               {isGenerating ? (
                 <>
@@ -190,7 +185,7 @@ export default function OutreachGenerationPanel({ prospect, onUpdate }: Outreach
             <button
               onClick={handleGenerateOutreach}
               disabled={isGenerating}
-              className="flex items-center gap-2 rounded-lg border border-white/10 bg-white/5 px-4 py-2 text-sm font-medium text-white transition-all hover:bg-white/10 disabled:opacity-50"
+              className="haptic-hover flex items-center gap-2 rounded-lg border border-white/10 bg-white/5 px-4 py-2 text-sm font-medium text-white transition-all hover:bg-white/10 disabled:opacity-50"
               title={isApproved ? "Re-generating will reset Approved status to Draft" : ""}
             >
               {isGenerating ? <Sparkles className="h-4 w-4 animate-spin" /> : <Sparkles className="h-4 w-4" />}
@@ -226,7 +221,7 @@ export default function OutreachGenerationPanel({ prospect, onUpdate }: Outreach
               <button
                 key={idx}
                 onClick={() => setActivePersonaTab(idx)}
-                className={`flex items-center gap-3 rounded-lg border px-4 py-3 text-left transition-all ${
+                className={`haptic-hover flex items-center gap-3 rounded-lg border px-4 py-3 text-left transition-all ${
                   activePersonaTab === idx
                     ? 'border-indigo-500/50 bg-indigo-500/10 text-indigo-300'
                     : 'border-white/5 bg-black/20 text-zinc-400 hover:border-white/10 hover:bg-white/5'
@@ -244,10 +239,16 @@ export default function OutreachGenerationPanel({ prospect, onUpdate }: Outreach
               const isLinkedIn = msg.channel.toLowerCase().includes('linkedin');
               const copyKey = `${activePersonaTab}-${msgIdx}`;
               return (
-                <div key={msgIdx} className="rounded-lg border border-white/10 bg-black/40 overflow-hidden">
+                <div key={msgIdx} className="haptic-hover rounded-lg border border-white/10 bg-black/40 overflow-hidden">
                   <div className="flex items-center justify-between border-b border-white/10 bg-white/5 px-4 py-2">
                     <span className="flex items-center gap-2 text-sm font-medium text-white">
-                      {isLinkedIn ? <Share2 className="h-4 w-4 text-[#0A66C2]" /> : <Mail className="h-4 w-4 text-zinc-400" />}
+                      {isLinkedIn ? (
+                        <Share2 className="h-4 w-4 text-[#0A66C2]" />
+                      ) : msg.channel.toLowerCase().includes('call') || msg.channel.toLowerCase().includes('phone') ? (
+                        <Phone className="h-4 w-4 text-emerald-400" />
+                      ) : (
+                        <Mail className="h-4 w-4 text-zinc-400" />
+                      )}
                       {msg.channel}
                     </span>
                     <button 

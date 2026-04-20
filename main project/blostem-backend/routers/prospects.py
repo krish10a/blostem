@@ -77,11 +77,31 @@ def generate_prospect_xlsx(prospects: List[models.Prospect]):
         if p.score_explanation:
             short_explanation = p.score_explanation.split("\n")[0][:120]
 
+        # Parse next_action JSON to show clean text
+        next_action_text = "Not Set"
+        if p.next_action:
+            try:
+                na_data = json.loads(p.next_action)
+                action = na_data.get("action", "")
+                timing = na_data.get("suggested_timing", "")
+                next_action_text = f"{action} — {timing}" if timing else action or "Not Set"
+            except Exception:
+                next_action_text = p.next_action[:80] if p.next_action else "Not Set"
+
+        # Parse compliance_status to show clean text
+        compliance_text = "Not Checked"
+        if p.compliance_status:
+            try:
+                c_data = json.loads(p.compliance_status)
+                compliance_text = c_data.get("overall_status", "Not Checked")
+            except Exception:
+                compliance_text = p.compliance_status[:40] if p.compliance_status else "Not Checked"
+
         row_data = [
             p.company_name, p.website or "", p.industry or "", p.size or "",
             p.fit_score, p.intent_score, p.priority_score, p.confidence_score,
-            p.compliance_status or "Not Checked",
-            p.next_action or "Not Set",
+            compliance_text,
+            next_action_text,
             persona_count, p.outreach_status or "NOT APPROVED",
             short_explanation
         ]
@@ -138,15 +158,42 @@ def generate_prospect_xlsx(prospects: List[models.Prospect]):
     for p in prospects:
         if not p.compliance_status:
             continue
-        # Try to parse compliance JSON if stored as JSON, else just show status
-        comp_row_data = [
-            p.company_name,
-            p.compliance_status,
-            "", "", "", "", "", ""
-        ]
-        for col_idx, val in enumerate(comp_row_data, start=1):
-            ws_comp.cell(row=comp_row, column=col_idx, value=val).font = SUBROW_FONT
-        comp_row += 1
+        try:
+            c_data = json.loads(p.compliance_status)
+            overall_status = c_data.get("overall_status", "")
+            safe_to_send = str(c_data.get("safe_to_send", ""))
+            summary = c_data.get("compliance_summary", "")
+            issues = c_data.get("issues", [])
+
+            if not issues:
+                # Write one summary row with no issues
+                comp_row_data = [p.company_name, overall_status, safe_to_send, summary, "", "", "", ""]
+                for col_idx, val in enumerate(comp_row_data, start=1):
+                    ws_comp.cell(row=comp_row, column=col_idx, value=val).font = SUBROW_FONT
+                comp_row += 1
+            else:
+                # Write one row per issue
+                for issue in issues:
+                    comp_row_data = [
+                        p.company_name,
+                        overall_status,
+                        safe_to_send,
+                        summary,
+                        issue.get("issue_type", ""),
+                        issue.get("description", ""),
+                        issue.get("offending_text", ""),
+                        issue.get("suggestion", "")
+                    ]
+                    for col_idx, val in enumerate(comp_row_data, start=1):
+                        cell = ws_comp.cell(row=comp_row, column=col_idx, value=val)
+                        cell.font = SUBROW_FONT
+                        cell.alignment = LEFT
+                    comp_row += 1
+        except Exception:
+            # Fallback: raw status only
+            ws_comp.cell(row=comp_row, column=1, value=p.company_name).font = SUBROW_FONT
+            ws_comp.cell(row=comp_row, column=2, value=p.compliance_status[:100] if p.compliance_status else "").font = SUBROW_FONT
+            comp_row += 1
 
     auto_width(ws_comp)
 
@@ -184,6 +231,143 @@ def export_all_prospects(db: Session = Depends(get_db)):
         headers={"Content-Disposition": 'attachment; filename="blostem_full_export.xlsx"'}
     )
 
+@router.get("/export-json")
+def export_all_json(db: Session = Depends(get_db)):
+    """Export all prospects as a downloadable JSON file for CRM import or external use."""
+    all_prospects = db.query(models.Prospect).all()
+    if not all_prospects:
+        raise HTTPException(status_code=404, detail="No prospects to export.")
+
+    export_list = []
+    for p in all_prospects:
+        # Parse JSON fields cleanly
+        signals_data = {}
+        persona_data = {}
+        messages_data = {}
+        compliance_data = {}
+        next_action_data = {}
+        sequence_data = {}
+
+        try: signals_data = json.loads(p.signals) if p.signals else {}
+        except Exception: pass
+        try: persona_data = json.loads(p.persona_map) if p.persona_map else {}
+        except Exception: pass
+        try: messages_data = json.loads(p.messages) if p.messages else {}
+        except Exception: pass
+        try: compliance_data = json.loads(p.compliance_status) if p.compliance_status else {}
+        except Exception: pass
+        try: next_action_data = json.loads(p.next_action) if p.next_action else {}
+        except Exception: pass
+        try: sequence_data = json.loads(p.sequence_plan) if p.sequence_plan else {}
+        except Exception: pass
+
+        export_list.append({
+            "id": p.id,
+            "company_name": p.company_name,
+            "website": p.website,
+            "industry": p.industry,
+            "size": p.size,
+            "scores": {
+                "fit_score": p.fit_score,
+                "intent_score": p.intent_score,
+                "priority_score": p.priority_score,
+                "confidence_score": p.confidence_score,
+                "score_explanation": p.score_explanation,
+            },
+            "signals": signals_data,
+            "persona_map": persona_data,
+            "outreach_messages": messages_data,
+            "compliance": compliance_data,
+            "next_action": next_action_data,
+            "sequence_plan": sequence_data,
+            "outreach_status": p.outreach_status,
+            "created_at": p.created_at.isoformat() if p.created_at else None,
+            "updated_at": p.updated_at.isoformat() if p.updated_at else None,
+        })
+
+    json_bytes = json.dumps(export_list, indent=2, ensure_ascii=False).encode("utf-8")
+    return StreamingResponse(
+        io.BytesIO(json_bytes),
+        media_type="application/json",
+        headers={"Content-Disposition": 'attachment; filename="blostem_pipeline_export.json"'}
+    )
+
+@router.get("/export-csv")
+def export_all_csv(db: Session = Depends(get_db)):
+    """Export all prospects as a downloadable CSV (flat columns for CRM import)."""
+    all_prospects = db.query(models.Prospect).all()
+    if not all_prospects:
+        raise HTTPException(status_code=404, detail="No prospects to export.")
+
+    output = io.StringIO()
+    writer = csv.writer(output)
+    writer.writerow([
+        "id",
+        "company_name",
+        "website",
+        "industry",
+        "size",
+        "fit_score",
+        "intent_score",
+        "priority_score",
+        "confidence_score",
+        "outreach_status",
+        "primary_persona",
+        "compliance_overall_status",
+        "next_action",
+        "created_at",
+        "updated_at",
+    ])
+
+    for p in all_prospects:
+        primary_persona = ""
+        try:
+            persona_data = json.loads(p.persona_map) if p.persona_map else {}
+            personas = persona_data.get("personas", [])
+            if personas:
+                primary_persona = personas[0].get("role") or personas[0].get("persona_name") or ""
+        except Exception:
+            primary_persona = ""
+
+        compliance_overall = ""
+        try:
+            compliance_data = json.loads(p.compliance_status) if p.compliance_status else {}
+            compliance_overall = compliance_data.get("overall_status", "")
+        except Exception:
+            compliance_overall = ""
+
+        next_action_text = ""
+        try:
+            na_data = json.loads(p.next_action) if p.next_action else {}
+            next_action_text = na_data.get("action", "") or ""
+        except Exception:
+            next_action_text = ""
+
+        writer.writerow([
+            p.id,
+            p.company_name,
+            p.website or "",
+            p.industry or "",
+            p.size or "",
+            p.fit_score if p.fit_score is not None else "",
+            p.intent_score if p.intent_score is not None else "",
+            p.priority_score if p.priority_score is not None else "",
+            p.confidence_score if p.confidence_score is not None else "",
+            p.outreach_status or "",
+            primary_persona,
+            compliance_overall,
+            next_action_text,
+            p.created_at.isoformat() if p.created_at else "",
+            p.updated_at.isoformat() if p.updated_at else "",
+        ])
+
+    csv_bytes = output.getvalue().encode("utf-8")
+    return StreamingResponse(
+        io.BytesIO(csv_bytes),
+        media_type="text/csv",
+        headers={"Content-Disposition": 'attachment; filename="blostem_pipeline_export.csv"'}
+    )
+
 # ── MODULE 9: Analytics ──────────────────────────────────────────────────────
 
 @router.get("/analytics", response_model=schemas.AnalyticsSummary)
@@ -198,8 +382,49 @@ def get_analytics(db: Session = Depends(get_db)):
     high_pri    = [p for p in scored if (p.priority_score or 0) >= 70]
 
     avg_score = 0.0
+    avg_conf = 0.0
+    avg_int = 0.0
     if scored:
         avg_score = round(sum(p.priority_score for p in scored) / len(scored), 1)
+        conf_vals = [p.confidence_score for p in scored if p.confidence_score is not None]
+        intent_vals = [p.intent_score for p in scored if p.intent_score is not None]
+        avg_conf = round(sum(conf_vals) / len(conf_vals), 1) if conf_vals else 0.0
+        avg_int = round(sum(intent_vals) / len(intent_vals), 1) if intent_vals else 0.0
+
+    approval_rate = 0.0
+    if with_outreach:
+        approval_rate = round((len(approved) / len(with_outreach)) * 100, 1)
+
+    flagged_count = 0
+    for p in all_p:
+        if p.compliance_status:
+            try:
+                import json
+                c_data = json.loads(p.compliance_status)
+                if c_data.get("overall_status") == "FLAGGED":
+                    flagged_count += 1
+            except:
+                pass
+
+    best_persona = "N/A"
+    persona_counts = {}
+    for p in approved:
+        if p.persona_map:
+            try:
+                p_data = json.loads(p.persona_map)
+                personas = p_data.get("personas", [])
+                if personas:
+                    # Extract a clean role title (e.g. "CEO" instead of long desc)
+                    role = personas[0].get("role", "Unknown")
+                    # Quick clean up: if it's too long, take the first 3 words or split by ' - '
+                    if len(role) > 25:
+                        role = role.split(" overseeing ")[0].split(" - ")[0].split(" responsible ")[0][:25].strip()
+                    persona_counts[role] = persona_counts.get(role, 0) + 1
+            except:
+                pass
+    
+    if persona_counts:
+        best_persona = max(persona_counts, key=persona_counts.get)
 
     top_3 = sorted(scored, key=lambda p: p.priority_score or 0, reverse=True)[:3]
     top_3_data = [
@@ -209,8 +434,10 @@ def get_analytics(db: Session = Depends(get_db)):
             "priority_score": p.priority_score,
             "fit_score": p.fit_score,
             "intent_score": p.intent_score,
+            "confidence_score": p.confidence_score,
             "next_action": p.next_action,
-            "outreach_status": p.outreach_status
+            "outreach_status": p.outreach_status,
+            "persona_map": p.persona_map
         }
         for p in top_3
     ]
@@ -223,6 +450,11 @@ def get_analytics(db: Session = Depends(get_db)):
         approved_count=len(approved),
         high_priority_count=len(high_pri),
         avg_priority_score=avg_score,
+        avg_confidence=avg_conf,
+        avg_intent=avg_int,
+        approval_rate=approval_rate,
+        compliance_flagged_count=flagged_count,
+        best_persona=best_persona,
         top_prospects=top_3_data
     )
 
@@ -311,6 +543,42 @@ def delete_prospect(prospect_id: int, db: Session = Depends(get_db)):
     db.delete(prospect)
     db.commit()
     return None
+
+@router.post("/batch-delete", status_code=204)
+def batch_delete_prospects(request: schemas.BatchActionRequest, db: Session = Depends(get_db)):
+    """Delete multiple prospects at once."""
+    if not request.ids:
+        return None
+    db.query(models.Prospect).filter(models.Prospect.id.in_(request.ids)).delete(synchronize_session=False)
+    db.commit()
+    return None
+
+@router.post("/seed-sample-data", status_code=201)
+def seed_sample_data(db: Session = Depends(get_db)):
+    """Inject 10 high-quality mock Fintech prospects for demo purposes."""
+    sample_data = [
+        {"company_name": "Stripe", "website": "stripe.com", "industry": "Payments", "size": "5000-10000"},
+        {"company_name": "Plaid", "website": "plaid.com", "industry": "Fintech Infrastructure", "size": "1000-5000"},
+        {"company_name": "Brex", "website": "brex.com", "industry": "Financial Services", "size": "1000-5000"},
+        {"company_name": "Ramp", "website": "ramp.com", "industry": "Spend Management", "size": "500-1000"},
+        {"company_name": "Revolut", "website": "revolut.com", "industry": "Neobanking", "size": "5000-10000"},
+        {"company_name": "Klarna", "website": "klarna.com", "industry": "E-commerce", "size": "1000-5000"},
+        {"company_name": "Wise", "website": "wise.com", "industry": "International Transfers", "size": "1000-5000"},
+        {"company_name": "Marqeta", "website": "marqeta.com", "industry": "Card Issuing", "size": "500-1000"},
+        {"company_name": "Checkout.com", "website": "checkout.com", "industry": "Payments", "size": "1000-5000"},
+        {"company_name": "Chime", "website": "chime.com", "industry": "Banking", "size": "1000-5000"},
+    ]
+    
+    added = 0
+    for data in sample_data:
+        # Check if already exists to avoid duplicates
+        exists = db.query(models.Prospect).filter(models.Prospect.company_name == data["company_name"]).first()
+        if not exists:
+            db.add(models.Prospect(**data))
+            added += 1
+    
+    db.commit()
+    return {"message": f"Successfully seeded {added} demo prospects.", "added": added}
 
 # ── MODULE 2: Signal Intelligence ────────────────────────────────────────────
 

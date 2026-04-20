@@ -2,7 +2,7 @@
 
 import React, { useState } from "react";
 import { Card, CardHeader, CardContent } from "@/components/ui/card";
-import { Mail, Share2, Clock, Calendar, Send, CheckCircle2, Lock } from "lucide-react";
+import { Mail, Share2, Clock, Calendar, Send, CheckCircle2, Lock, Phone, FileText } from "lucide-react";
 
 interface SequenceStep {
   day: number;
@@ -53,7 +53,7 @@ const SequenceTimeline: React.FC<SequenceTimelineProps> = ({ planJson, companyNa
   try {
     const parsed = JSON.parse(planJson);
     plans = parsed.sequence_payload || [];
-  } catch (e) {
+  } catch {
     return (
       <div className="p-8 text-center border-2 border-dashed border-white/10 rounded-xl">
         <p className="text-zinc-400">Unable to load sequence timeline. Please regenerate outreach.</p>
@@ -70,7 +70,7 @@ const SequenceTimeline: React.FC<SequenceTimelineProps> = ({ planJson, companyNa
   }
 
   return (
-    <div className="space-y-6 py-4 w-full min-w-0">
+    <div className="reveal animate-fade-in-up delay-200 space-y-6 py-4 w-full min-w-0">
       <div className="flex flex-col gap-2">
         <h2 className="text-2xl font-bold text-white flex items-center gap-2">
           <Calendar className="w-6 h-6 text-blue-400" />
@@ -109,7 +109,7 @@ const SequenceTimeline: React.FC<SequenceTimelineProps> = ({ planJson, companyNa
                           : 'bg-zinc-900 border-zinc-700 shadow-none'
                     }`}></div>
                     
-                    <Card className={`transition-all overflow-hidden border ${
+                    <Card className={`mouse-glow haptic-hover transition-all overflow-hidden border ${
                       sentDate 
                         ? 'bg-emerald-500/5 border-emerald-500/20' 
                         : isUnlocked
@@ -127,11 +127,13 @@ const SequenceTimeline: React.FC<SequenceTimelineProps> = ({ planJson, companyNa
                       </CardHeader>
                       <CardContent className="p-4 space-y-4">
                         <div className={`flex items-center gap-2 ${sentDate ? 'text-emerald-300' : isUnlocked ? 'text-blue-300' : 'text-zinc-500'}`}>
-                          {step.channel.toLowerCase() === 'linkedin' ? (
-                            <Share2 className="w-4 h-4 shrink-0" />
-                          ) : (
-                            <Mail className="w-4 h-4 shrink-0" />
-                          )}
+                          {(() => {
+                            const c = step.channel.toLowerCase();
+                            if (c.includes("linkedin")) return <Share2 className="w-4 h-4 shrink-0" />;
+                            if (c.includes("call") || c.includes("phone")) return <Phone className="w-4 h-4 shrink-0" />;
+                            if (c.includes("note") || c.includes("internal")) return <FileText className="w-4 h-4 shrink-0" />;
+                            return <Mail className="w-4 h-4 shrink-0" />;
+                          })()}
                           <span className="font-semibold text-sm truncate">
                             {step.subject || "No Subject"}
                           </span>
@@ -139,7 +141,7 @@ const SequenceTimeline: React.FC<SequenceTimelineProps> = ({ planJson, companyNa
                         <p className={`text-xs leading-relaxed line-clamp-3 whitespace-pre-wrap italic ${
                           isUnlocked ? 'text-zinc-400' : 'text-zinc-600'
                         }`}>
-                          "{step.body}"
+                          &quot;{step.body}&quot;
                         </p>
 
                         <div className="pt-2 border-t border-white/5">

@@ -1,7 +1,7 @@
 "use client";
 
 import { useState } from "react";
-import { ShieldCheck, ShieldAlert, ShieldX, AlertCircle, CheckCircle2, Loader2, ChevronDown, ChevronUp } from "lucide-react";
+import { ShieldCheck, ShieldAlert, ShieldX, AlertCircle, CheckCircle2, ChevronDown, ChevronUp } from "lucide-react";
 
 interface ComplianceIssue {
   issue_type: string;
@@ -24,10 +24,9 @@ interface Props {
     messages?: string;
     compliance_status?: string; // JSON string
   };
-  onUpdate: () => void;
 }
 
-export default function CompliancePanel({ prospect, onUpdate }: Props) {
+export default function CompliancePanel({ prospect }: Props) {
   const [expandedIssue, setExpandedIssue] = useState<number | null>(null);
 
   const hasOutreach = !!prospect.messages;
@@ -39,11 +38,16 @@ export default function CompliancePanel({ prospect, onUpdate }: Props) {
       complianceDetail = JSON.parse(prospect.compliance_status);
     } catch {
       // fallback: treat raw string as status
+      const raw = prospect.compliance_status;
+      const status: ComplianceDetail["overall_status"] =
+        raw === "APPROVED" || raw === "NEEDS_REVISION" || raw === "FLAGGED"
+          ? raw
+          : "NEEDS_REVISION";
       complianceDetail = {
-        overall_status: prospect.compliance_status as any,
-        safe_to_send: prospect.compliance_status === "APPROVED",
+        overall_status: status,
+        safe_to_send: status === "APPROVED",
         issues: [],
-        compliance_summary: prospect.compliance_status,
+        compliance_summary: typeof raw === "string" ? raw : "Compliance status unavailable.",
       };
     }
   }
@@ -69,7 +73,7 @@ export default function CompliancePanel({ prospect, onUpdate }: Props) {
   };
 
   return (
-    <div className="mt-6 rounded-xl border border-white/10 bg-black/20 p-5 backdrop-blur-sm">
+    <div className="mouse-glow reveal haptic-hover animate-fade-in-up delay-150 mt-6 rounded-xl border border-white/10 bg-black/20 p-5 backdrop-blur-sm">
       <div className="flex items-center justify-between mb-4 flex-wrap gap-3">
         <div className="flex items-center gap-2">
           <ShieldCheck className="h-5 w-5 text-indigo-400" />
@@ -128,7 +132,7 @@ export default function CompliancePanel({ prospect, onUpdate }: Props) {
                       <ShieldAlert className="h-3.5 w-3.5 text-red-400 shrink-0" />
                       <span className="text-xs font-semibold text-red-300">{issue.issue_type}</span>
                       <span className="text-xs text-zinc-500 font-mono truncate max-w-[180px]">
-                        "{issue.offending_text}"
+                        &quot;{issue.offending_text}&quot;
                       </span>
                     </div>
                     {expandedIssue === i ? (

@@ -137,6 +137,11 @@ class AnalyticsSummary(BaseModel):
     approved_count: int
     high_priority_count: int    # priority_score >= 70
     avg_priority_score: float
+    avg_confidence: float
+    avg_intent: float
+    approval_rate: float        # approved / prospects_with_outreach
+    compliance_flagged_count: int
+    best_persona: Optional[str] = None
     top_prospects: list         # Top 3 by priority_score
 
 # ─── Module 7: Sequence Builder ───────────────────────────────────────────────
@@ -156,3 +161,7 @@ class SequencePlan(BaseModel):
 class FullSequenceOutput(BaseModel):
     """The complete sequence plan for all personas."""
     sequence_payload: List[SequencePlan]
+
+class BatchActionRequest(BaseModel):
+    """Request body for bulk actions like deletion."""
+    ids: List[int]
