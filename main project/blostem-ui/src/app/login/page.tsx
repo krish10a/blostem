@@ -3,6 +3,7 @@
 
 import Link from "next/link";
 import { useState } from "react";
+import { FloatingOrb, MotionButton, MotionCard, MotionGroup, MotionItem } from "@/components/motion/BlostemMotion";
 import { MaterialIcon } from "@/components/shell/MaterialIcon";
 
 export default function LoginPage() {
@@ -10,11 +11,11 @@ export default function LoginPage() {
 
   return (
     <div className="relative min-h-screen overflow-hidden bg-background text-on-surface">
-      <div className="absolute top-[-20%] left-[-10%] h-[50vw] w-[50vw] rounded-full bg-primary-container/20 blur-[120px] pointer-events-none animate-mesh" />
-      <div className="absolute bottom-[-20%] right-[-10%] h-[40vw] w-[40vw] rounded-full bg-secondary-container/10 blur-[100px] pointer-events-none animate-mesh-slow" />
+      <FloatingOrb className="absolute left-[-10%] top-[-20%] h-[50vw] w-[50vw] rounded-full bg-primary-container/20 blur-[120px] pointer-events-none" duration={22} />
+      <FloatingOrb className="absolute bottom-[-20%] right-[-10%] h-[40vw] w-[40vw] rounded-full bg-secondary-container/10 blur-[100px] pointer-events-none" duration={28} delay={0.35} />
 
       <div className="relative z-10 mx-auto grid w-full max-w-5xl grid-cols-1 items-center gap-12 px-6 py-16 md:grid-cols-2 md:gap-24">
-        <div className="hidden reveal animate-fade-in-up flex-col justify-center space-y-12 border-r border-outline-variant/15 pr-8 md:flex">
+        <MotionGroup className="hidden flex-col justify-center space-y-12 border-r border-outline-variant/15 pr-8 md:flex">
           <div className="space-y-6">
             <div className="flex items-center gap-3">
               <MaterialIcon name="language" className="text-primary text-4xl" fill />
@@ -32,20 +33,20 @@ export default function LoginPage() {
               Access high-stakes orchestration tools designed for scale, precision, and zero-latency decision making.
             </p>
           </div>
-        </div>
+        </MotionGroup>
 
         <div className="mx-auto w-full max-w-md">
-          <div className="mouse-glow reveal animate-fade-in-up delay-100 relative overflow-hidden rounded-xl border border-outline-variant/20 bg-surface-container/60 p-8 shadow-[0_20px_40px_rgba(6,14,32,0.4)] backdrop-blur-2xl sm:p-10">
+          <MotionCard className="mouse-glow relative overflow-hidden rounded-xl border border-outline-variant/20 bg-surface-container/60 p-8 shadow-[0_20px_40px_rgba(6,14,32,0.4)] backdrop-blur-2xl sm:p-10" delay={0.1}>
             <div className="absolute left-0 right-0 top-0 h-[1px] bg-gradient-to-r from-transparent via-primary/30 to-transparent" />
 
-            <div className="mb-8 text-center">
+            <MotionItem className="mb-8 text-center">
               <h2 className="font-headline text-2xl font-bold tracking-tight text-on-surface">
                 Access Command
               </h2>
               <p className="mt-2 text-sm text-on-surface-variant">
                 Authenticate to continue securely
               </p>
-            </div>
+            </MotionItem>
 
             <div className="space-y-4 mb-8">
               <button className="w-full flex items-center justify-center gap-3 bg-surface-container hover:bg-surface-bright transition-all duration-300 text-on-surface font-label font-medium text-sm py-3 px-4 rounded-lg border border-outline-variant/20 shadow-sm">
@@ -92,7 +93,8 @@ export default function LoginPage() {
                 </div>
               </div>
 
-              <button
+              <MotionButton>
+                <button
                 type="submit"
                 className="btn-pipeline w-full rounded-lg bg-gradient-to-r from-primary to-primary-container px-4 py-3 text-sm font-bold text-on-primary shadow-[0_8px_16px_rgba(17,101,231,0.2)] hover:shadow-[0_8px_20px_rgba(17,101,231,0.3)] transition-all"
               >
@@ -100,7 +102,8 @@ export default function LoginPage() {
                   Send Magic Link
                   <MaterialIcon name="auto_awesome" className="text-lg" fill />
                 </span>
-              </button>
+                </button>
+              </MotionButton>
             </form>
 
             <div className="mt-8 border-t border-outline-variant/20 pt-6 text-center">
@@ -112,10 +115,9 @@ export default function LoginPage() {
                 <MaterialIcon name="arrow_right_alt" className="text-lg" />
               </Link>
             </div>
-          </div>
+          </MotionCard>
         </div>
       </div>
     </div>
   );
 }
-

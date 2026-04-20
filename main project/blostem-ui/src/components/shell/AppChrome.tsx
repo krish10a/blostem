@@ -2,12 +2,14 @@
 
 import { ReactNode, useEffect, useState } from "react";
 import { usePathname } from "next/navigation";
+import { motion, useReducedMotion } from "motion/react";
 import { AppSidebar } from "@/components/shell/AppSidebar";
 import { AppTopBar } from "@/components/shell/AppTopBar";
 
 export function AppChrome({ children }: { children: ReactNode }) {
   const pathname = usePathname();
   const [sidebarOpen, setSidebarOpen] = useState(false);
+  const reduceMotion = useReducedMotion();
 
   useEffect(() => {
     const timeout = window.setTimeout(() => setSidebarOpen(false), 0);
@@ -15,10 +17,15 @@ export function AppChrome({ children }: { children: ReactNode }) {
   }, [pathname]);
 
   return (
-    <div className="relative z-10 min-h-screen">
+    <motion.div
+      className="relative z-10 min-h-screen"
+      initial={reduceMotion ? undefined : { opacity: 0 }}
+      animate={reduceMotion ? undefined : { opacity: 1 }}
+      transition={reduceMotion ? undefined : { duration: 0.45 }}
+    >
       <AppSidebar isOpen={sidebarOpen} onClose={() => setSidebarOpen(false)} />
 
-      <div className="relative min-h-screen lg:pl-[19rem]">
+      <div className="relative min-h-screen lg:pl-[20.25rem]">
         <div className="px-3 pt-3 sm:px-4 sm:pt-4 lg:px-6 lg:pt-5">
           <AppTopBar onMenuToggle={() => setSidebarOpen((open) => !open)} />
         </div>
@@ -27,6 +34,6 @@ export function AppChrome({ children }: { children: ReactNode }) {
           <div className="mx-auto max-w-[1560px]">{children}</div>
         </main>
       </div>
-    </div>
+    </motion.div>
   );
 }

@@ -1,10 +1,10 @@
 import PipelineWorkbench from "@/components/pipeline/PipelineWorkbench";
+import { MotionSection } from "@/components/motion/BlostemMotion";
 
 export default function PipelinePage() {
   return (
-    <div className="reveal animate-fade-in-up">
+    <MotionSection>
       <PipelineWorkbench />
-    </div>
+    </MotionSection>
   );
 }
-

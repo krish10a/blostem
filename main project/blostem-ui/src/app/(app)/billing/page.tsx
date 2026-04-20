@@ -1,9 +1,10 @@
 import { MaterialIcon } from "@/components/shell/MaterialIcon";
+import { MotionButton, MotionCard, MotionGroup } from "@/components/motion/BlostemMotion";
 
 export default function BillingPage() {
   return (
     <div className="space-y-8">
-      <div className="mouse-glow reveal haptic-hover animate-fade-in-up rounded-2xl border border-outline-variant/10 bg-surface-container-low/60 p-6 backdrop-blur-md">
+      <MotionCard className="mouse-glow haptic-hover rounded-2xl border border-outline-variant/10 bg-surface-container-low/60 p-6 backdrop-blur-md">
         <div className="flex items-end justify-between gap-6 flex-wrap">
           <div>
             <h2 className="font-headline text-3xl font-bold tracking-tight text-on-surface">
@@ -14,21 +15,25 @@ export default function BillingPage() {
             </p>
           </div>
           <div className="flex gap-3">
-            <button className="inline-flex items-center gap-2 rounded-lg border border-outline-variant/30 px-4 py-2 text-sm font-medium text-on-surface hover:bg-surface-container-high hover:border-outline-variant/50 transition-all">
+            <MotionButton>
+              <button className="inline-flex items-center gap-2 rounded-lg border border-outline-variant/30 px-4 py-2 text-sm font-medium text-on-surface hover:bg-surface-container-high hover:border-outline-variant/50 transition-all">
               <MaterialIcon name="download" className="text-sm" />
               Export Data
             </button>
-            <button className="inline-flex items-center gap-2 rounded-lg bg-gradient-to-r from-primary to-primary-container px-4 py-2 text-sm font-medium text-on-primary shadow-[0_0_15px_rgba(177,197,255,0.2)] hover:shadow-[0_0_20px_rgba(177,197,255,0.4)] transition-all">
+            </MotionButton>
+            <MotionButton delay={0.08}>
+              <button className="inline-flex items-center gap-2 rounded-lg bg-gradient-to-r from-primary to-primary-container px-4 py-2 text-sm font-medium text-on-primary shadow-[0_0_15px_rgba(177,197,255,0.2)] hover:shadow-[0_0_20px_rgba(177,197,255,0.4)] transition-all">
               <MaterialIcon name="save" className="text-sm" />
               Save Changes
             </button>
+            </MotionButton>
           </div>
         </div>
-      </div>
+      </MotionCard>
 
-      <div className="grid grid-cols-1 gap-6 lg:grid-cols-3">
+      <MotionGroup className="grid grid-cols-1 gap-6 lg:grid-cols-3">
         <div className="space-y-6 lg:col-span-2">
-          <section className="mouse-glow reveal haptic-hover animate-fade-in-up delay-100 rounded-2xl border border-outline-variant/10 bg-surface-container/50 p-6 backdrop-blur-md">
+          <MotionCard className="mouse-glow haptic-hover rounded-2xl border border-outline-variant/10 bg-surface-container/50 p-6 backdrop-blur-md" delay={0.08}>
             <h3 className="font-headline text-xl font-bold text-on-surface mb-6 flex items-center gap-2">
               <span className="flex h-8 w-8 items-center justify-center rounded-lg border border-primary/20 bg-primary/10">
                 <MaterialIcon name="person" className="text-primary text-sm" />
@@ -53,9 +58,9 @@ export default function BillingPage() {
                 </div>
               ))}
             </div>
-          </section>
+          </MotionCard>
 
-          <section className="mouse-glow reveal haptic-hover animate-fade-in-up delay-150 rounded-2xl border border-outline-variant/10 bg-surface-container/50 p-6 backdrop-blur-md">
+          <MotionCard className="mouse-glow haptic-hover rounded-2xl border border-outline-variant/10 bg-surface-container/50 p-6 backdrop-blur-md" delay={0.14}>
             <h3 className="font-headline text-xl font-bold text-on-surface mb-6 flex items-center gap-2">
               <span className="flex h-8 w-8 items-center justify-center rounded-lg border border-secondary/20 bg-secondary/10">
                 <MaterialIcon name="tune" className="text-secondary text-sm" />
@@ -91,11 +96,11 @@ export default function BillingPage() {
                 </div>
               </div>
             </div>
-          </section>
+          </MotionCard>
         </div>
 
         <div className="space-y-6">
-          <section className="mouse-glow reveal haptic-hover animate-fade-in-up delay-200 rounded-2xl border border-outline-variant/10 bg-surface-container/50 p-6 backdrop-blur-md">
+          <MotionCard className="mouse-glow haptic-hover rounded-2xl border border-outline-variant/10 bg-surface-container/50 p-6 backdrop-blur-md" delay={0.2}>
             <div className="flex items-start justify-between">
               <h3 className="font-headline text-xl font-bold text-on-surface flex items-center gap-2">
                 <span className="flex h-8 w-8 items-center justify-center rounded-lg border border-tertiary/20 bg-tertiary/10">
@@ -131,10 +136,9 @@ export default function BillingPage() {
                 Manage Billing
               </button>
             </div>
-          </section>
+          </MotionCard>
         </div>
-      </div>
+      </MotionGroup>
     </div>
   );
 }
-

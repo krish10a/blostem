@@ -21,6 +21,7 @@ import SalesActionPanel from "@/components/SalesActionPanel";
 import SequenceTimeline from "@/components/SequenceTimeline";
 import SignalIntelligencePanel from "@/components/SignalIntelligencePanel";
 import { DashboardSkeleton } from "@/components/LoadingSkeleton";
+import { MotionButton, MotionCard, MotionGroup, MotionSection } from "@/components/motion/BlostemMotion";
 
 type Prospect = {
   id: number;
@@ -258,7 +259,7 @@ export default function PipelineWorkbench() {
       <Toaster richColors position="top-right" />
 
       <div className="mb-4 flex flex-col gap-4 xl:flex-row xl:items-center xl:justify-between">
-        <div className="glass-panel animate-fade-in-up rounded-[28px] px-4 py-4 sm:px-5">
+        <MotionCard className="glass-panel rounded-[28px] px-4 py-4 sm:px-5" hover={false}>
           <div className="mb-2 flex flex-wrap items-center gap-2">
             <span className="font-label text-[10px] uppercase tracking-[0.24em] text-primary">
               Execution Surface
@@ -272,9 +273,9 @@ export default function PipelineWorkbench() {
             Add prospects, review queue quality, and run signal-to-outreach automation without losing
             layout context on smaller screens.
           </p>
-        </div>
+        </MotionCard>
 
-        <div className="flex flex-wrap items-center gap-3">
+        <MotionSection className="flex flex-wrap items-center gap-3" delay={0.08}>
           <div className="flex flex-wrap items-center gap-2 rounded-2xl border border-outline-variant/10 bg-surface-container-low/70 p-1.5">
             <button
               onClick={() => setActiveTab("pipeline")}
@@ -307,7 +308,7 @@ export default function PipelineWorkbench() {
             <RefreshCw className={`h-3.5 w-3.5 ${isRefreshing ? "animate-spin" : ""}`} />
             Refresh
           </button>
-        </div>
+        </MotionSection>
       </div>
 
       {activeTab === "analytics" ? (
@@ -321,7 +322,7 @@ export default function PipelineWorkbench() {
           ) : (
             <div className="grid w-full max-w-[1600px] gap-6 xl:grid-cols-[minmax(360px,420px)_minmax(0,1fr)]">
               <div className="flex min-w-0 flex-col gap-4 xl:sticky xl:top-28 xl:self-start">
-                <div className="glass-panel animate-fade-in-up rounded-[28px] p-4 sm:p-5">
+                <MotionCard className="glass-panel rounded-[28px] p-4 sm:p-5" hover={false}>
                   <div className="grid gap-5">
                     <div>
                       <h3 className="mb-3 font-headline text-sm font-semibold uppercase tracking-wider text-on-surface">
@@ -361,9 +362,9 @@ export default function PipelineWorkbench() {
                       Seed Demo Data
                     </button>
                   </div>
-                </div>
+                </MotionCard>
 
-                <div className="glass-panel animate-fade-in-up delay-50 relative flex min-h-[360px] flex-1 flex-col overflow-hidden rounded-[28px]">
+                <MotionCard className="glass-panel relative flex min-h-[360px] flex-1 flex-col overflow-hidden rounded-[28px]" delay={0.06} hover={false}>
                   <div className="sticky top-0 z-10 flex flex-wrap items-center justify-between gap-3 border-b border-outline-variant/10 bg-surface-container-low/95 p-4">
                     <div className="flex items-center gap-2">
                       <h3 className="font-headline text-sm font-semibold text-on-surface">Active Queue</h3>
@@ -461,16 +462,16 @@ export default function PipelineWorkbench() {
                           const isSelected = selectedProspect?.id === p.id;
                           const isChecked = selectedIds.has(p.id);
                           return (
-                            <div
-                              key={p.id}
-                              onClick={() => setSelectedProspect(p)}
-                              className={
-                                isSelected
-                                  ? "ambient-shadow haptic-hover animate-fade-in-up group cursor-pointer rounded-[22px] border border-primary/20 bg-surface-container-highest p-4"
-                                  : "haptic-hover animate-fade-in-up cursor-pointer rounded-[22px] border border-transparent bg-surface-container p-4 transition-all hover:border-outline-variant/20 hover:bg-surface-container-high"
-                              }
-                              style={{ animationDelay: `${Math.min(index * 35, 210)}ms` }}
-                            >
+                              <MotionCard
+                                key={p.id}
+                                className={
+                                  isSelected
+                                    ? "ambient-shadow haptic-hover group cursor-pointer rounded-[22px] border border-primary/20 bg-surface-container-highest p-4"
+                                    : "haptic-hover cursor-pointer rounded-[22px] border border-transparent bg-surface-container p-4 transition-all hover:border-outline-variant/20 hover:bg-surface-container-high"
+                                }
+                                delay={Math.min(index * 0.035, 0.21)}
+                              >
+                                <div onClick={() => setSelectedProspect(p)}>
                               <div className="flex items-start justify-between gap-3">
                                 <div className="min-w-0">
                                   <div className="truncate font-headline text-sm font-bold text-on-surface">
@@ -513,23 +514,24 @@ export default function PipelineWorkbench() {
                                   Select
                                 </label>
                               </div>
-                            </div>
+                                </div>
+                              </MotionCard>
                           );
                         })}
                       </div>
                     )}
                   </div>
-                </div>
+                </MotionCard>
               </div>
 
               <div className="min-w-0 pb-8 xl:max-h-[calc(100vh-9rem)] xl:overflow-y-auto xl:pr-2">
                 {!selectedProspect ? (
-                  <div className="glass-panel flex h-64 items-center justify-center rounded-[28px] border border-dashed border-outline-variant/20 text-sm text-on-surface-variant">
+                  <MotionCard className="glass-panel flex h-64 items-center justify-center rounded-[28px] border border-dashed border-outline-variant/20 text-sm text-on-surface-variant" hover={false}>
                     Select a prospect to begin AI processing.
-                  </div>
+                  </MotionCard>
                 ) : (
-                  <div className="flex flex-col gap-4">
-                    <div className="glass-panel animate-fade-in-up delay-100 relative overflow-hidden rounded-[30px] p-6">
+                  <MotionGroup className="flex flex-col gap-4">
+                    <MotionCard className="glass-panel relative overflow-hidden rounded-[30px] p-6" delay={0.1} hover={false}>
                       <div className="flex flex-wrap items-start justify-between gap-4">
                         <div className="min-w-0">
                           <h2 className="font-headline text-2xl font-bold tracking-tight text-on-surface">
@@ -542,7 +544,8 @@ export default function PipelineWorkbench() {
                           </p>
                         </div>
 
-                        <button
+                        <MotionButton>
+                          <button
                           onClick={handleRunFullPipeline}
                           disabled={pipelineRunning}
                           className="btn-pipeline inline-flex items-center gap-2 rounded-full bg-gradient-to-r from-primary to-primary-container px-4 py-2.5 text-sm font-semibold text-on-primary shadow-[0_0_15px_rgba(17,101,231,0.3)] disabled:opacity-60"
@@ -555,6 +558,7 @@ export default function PipelineWorkbench() {
                           )}
                           {pipelineRunning ? (pipelineStep ?? "Running...") : "Run Full Pipeline"}
                         </button>
+                        </MotionButton>
                       </div>
 
                       {pipelineRunning && (
@@ -568,7 +572,7 @@ export default function PipelineWorkbench() {
                           </div>
                         </div>
                       )}
-                    </div>
+                    </MotionCard>
 
                     {selectedProspect.next_action && (
                       <SalesActionPanel
@@ -613,14 +617,14 @@ export default function PipelineWorkbench() {
                     )}
 
                     {selectedProspect.sequence_plan && (
-                      <div className="mt-2 min-w-0 border-t border-outline-variant/10 pt-6">
+                      <MotionSection className="mt-2 min-w-0 border-t border-outline-variant/10 pt-6" delay={0.12}>
                         <SequenceTimeline
                           planJson={selectedProspect.sequence_plan}
                           companyName={selectedProspect.company_name}
                         />
-                      </div>
+                      </MotionSection>
                     )}
-                  </div>
+                  </MotionGroup>
                 )}
               </div>
             </div>

@@ -20,6 +20,7 @@ import {
   XAxis,
   YAxis,
 } from "recharts";
+import { MotionCard, MotionGroup, MotionSection } from "@/components/motion/BlostemMotion";
 
 interface AnalyticsSummary {
   total_prospects: number;
@@ -178,12 +179,12 @@ export default function AnalyticsDashboard() {
 
   return (
     <div className="space-y-6">
-      <div className="grid grid-cols-2 gap-3 md:grid-cols-3 xl:grid-cols-6">
+      <MotionGroup className="grid grid-cols-2 gap-3 md:grid-cols-3 xl:grid-cols-6">
         {STAT_CARDS.map(({ key, label, icon: Icon, accent, suffix }, index) => (
-          <div
+          <MotionCard
             key={key}
-            className="mouse-glow reveal animate-fade-in-up glass-panel rounded-[26px] p-4"
-            style={{ animationDelay: `${index * 60}ms` }}
+            className="mouse-glow glass-panel rounded-[26px] p-4"
+            delay={index * 0.05}
           >
             <div className="mb-3 flex items-center justify-between">
               <Icon className={`h-4 w-4 ${accent}`} />
@@ -195,12 +196,12 @@ export default function AnalyticsDashboard() {
               {formatStatValue(data[key], suffix)}
             </div>
             <p className="mt-1 text-[11px] uppercase tracking-[0.22em] text-slate-500">{label}</p>
-          </div>
+          </MotionCard>
         ))}
-      </div>
+      </MotionGroup>
 
       <div className="grid gap-6 xl:grid-cols-[minmax(0,1fr)_minmax(0,1fr)]">
-        <div className="mouse-glow reveal animate-fade-in-up glass-panel rounded-[30px] p-6">
+        <MotionCard className="mouse-glow glass-panel rounded-[30px] p-6">
           <div className="mb-8 flex items-center justify-between gap-3">
             <h3 className="flex items-center gap-2 text-sm font-bold uppercase tracking-[0.2em] text-white">
               <TrendingUp className="h-4 w-4 text-secondary" />
@@ -238,9 +239,9 @@ export default function AnalyticsDashboard() {
               );
             })}
           </div>
-        </div>
+        </MotionCard>
 
-        <div className="mouse-glow reveal animate-fade-in-up glass-panel rounded-[30px] p-6">
+        <MotionCard className="mouse-glow glass-panel rounded-[30px] p-6" delay={0.08}>
           <h3 className="mb-6 flex items-center gap-2 text-sm font-bold uppercase tracking-[0.2em] text-white">
             <Star className="h-4 w-4 text-chart-3" />
             Top Priority Accounts
@@ -280,10 +281,10 @@ export default function AnalyticsDashboard() {
               </Bar>
             </BarChart>
           </ResponsiveContainer>
-        </div>
+        </MotionCard>
       </div>
 
-      <div className="mouse-glow reveal animate-fade-in-up glass-panel overflow-hidden rounded-[30px]">
+      <MotionSection className="mouse-glow glass-panel overflow-hidden rounded-[30px]" delay={0.14}>
         <div className="flex items-center justify-between border-b border-white/6 bg-white/[0.03] px-6 py-4">
           <div>
             <h3 className="text-sm font-bold uppercase tracking-[0.22em] text-white">
@@ -356,7 +357,7 @@ export default function AnalyticsDashboard() {
             </tbody>
           </table>
         </div>
-      </div>
+      </MotionSection>
     </div>
   );
 }

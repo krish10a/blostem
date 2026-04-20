@@ -1,4 +1,5 @@
 import Link from "next/link";
+import { MotionButton, MotionCard, MotionGroup, MotionSection } from "@/components/motion/BlostemMotion";
 import { MaterialIcon } from "@/components/shell/MaterialIcon";
 
 function ExportCard(props: {
@@ -13,7 +14,7 @@ function ExportCard(props: {
   disabled?: boolean;
 }) {
   return (
-    <div className="mouse-glow reveal haptic-hover group relative flex flex-col overflow-hidden rounded-xl border border-outline-variant/10 bg-surface-container-low/60 p-8 shadow-xl shadow-black/20 backdrop-blur-sm transition-all duration-500 hover:-translate-y-1 hover:border-outline-variant/30 hover:bg-surface-container/80">
+    <MotionCard className="mouse-glow haptic-hover group relative flex flex-col overflow-hidden rounded-xl border border-outline-variant/10 bg-surface-container-low/60 p-8 shadow-xl shadow-black/20 backdrop-blur-sm transition-all duration-500 hover:border-outline-variant/30 hover:bg-surface-container/80">
       <div className="absolute top-0 right-0 h-48 w-48 -mr-20 -mt-20 rounded-full bg-primary/10 blur-3xl transition-colors duration-700 group-hover:bg-primary/20" />
 
       <div className="relative z-10 mb-6 flex items-start justify-between">
@@ -46,7 +47,8 @@ function ExportCard(props: {
           Coming soon
         </div>
       ) : (
-        <Link
+        <MotionButton>
+          <Link
           href={props.href}
           target="_blank"
           className={
@@ -58,15 +60,16 @@ function ExportCard(props: {
           <MaterialIcon name="download" className="text-[20px]" />
           Download
         </Link>
+        </MotionButton>
       )}
-    </div>
+    </MotionCard>
   );
 }
 
 export default function ExportPage() {
   return (
     <div className="space-y-12">
-      <div className="reveal animate-fade-in-up">
+      <MotionSection>
         <div className="mb-4 inline-flex items-center gap-2 rounded-full border border-outline-variant/20 bg-surface-container-low/50 px-3 py-1 shadow-lg shadow-black/20 backdrop-blur-md">
           <span className="h-2 w-2 rounded-full bg-secondary animate-pulse" />
           <span className="font-label text-xs uppercase tracking-wider text-on-surface-variant">
@@ -79,9 +82,9 @@ export default function ExportPage() {
         <p className="mt-4 max-w-2xl text-lg text-outline">
           Select a format below to extract your insights into your operational workflows.
         </p>
-      </div>
+      </MotionSection>
 
-      <div className="grid grid-cols-1 gap-6 md:grid-cols-2">
+      <MotionGroup className="grid grid-cols-1 gap-6 md:grid-cols-2">
         <ExportCard
           icon="table_chart"
           ext=".XLSX"
@@ -120,8 +123,7 @@ export default function ExportPage() {
           href="#"
           disabled
         />
-      </div>
+      </MotionGroup>
     </div>
   );
 }
-

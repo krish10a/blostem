@@ -2,6 +2,7 @@
 
 import { useEffect, useState } from "react";
 import Link from "next/link";
+import { MotionCard, MotionGroup } from "@/components/motion/BlostemMotion";
 import { MaterialIcon } from "@/components/shell/MaterialIcon";
 
 type Summary = {
@@ -50,16 +51,16 @@ export default function DashboardPage() {
 
   return (
     <div className="space-y-8">
-      <div className="grid grid-cols-1 gap-4 md:grid-cols-3 lg:grid-cols-5">
+      <MotionGroup className="grid grid-cols-1 gap-4 md:grid-cols-3 lg:grid-cols-5">
         {kpis.map((k, idx) => (
-          <div
+          <MotionCard
             key={k.label}
             className={
               k.accent
-                ? "mouse-glow haptic-hover reveal animate-fade-in-up relative overflow-hidden rounded-xl border border-primary/20 bg-gradient-to-br from-surface-container to-surface-container-high p-5 shadow-[0_4px_20px_rgba(177,197,255,0.05)]"
-                : "mouse-glow haptic-hover reveal glass-card animate-fade-in-up rounded-xl p-5"
+                ? "mouse-glow haptic-hover relative overflow-hidden rounded-xl border border-primary/20 bg-gradient-to-br from-surface-container to-surface-container-high p-5 shadow-[0_4px_20px_rgba(177,197,255,0.05)]"
+                : "mouse-glow haptic-hover glass-card rounded-xl p-5"
             }
-            style={{ animationDelay: `${(idx + 1) * 80}ms` }}
+            delay={(idx + 1) * 0.05}
           >
             {k.accent && (
               <div className="absolute -right-4 -top-4 h-24 w-24 rounded-full bg-primary/20 blur-2xl" />
@@ -79,12 +80,12 @@ export default function DashboardPage() {
                 <span className="kpi-value font-headline text-3xl font-bold">{k.value}</span>
               </div>
             </div>
-          </div>
+          </MotionCard>
         ))}
-      </div>
+      </MotionGroup>
 
       <div className="grid grid-cols-1 gap-6 lg:grid-cols-3">
-        <div className="mouse-glow reveal haptic-hover animate-fade-in-up delay-150 lg:col-span-2 rounded-xl border border-outline-variant/15 bg-surface-container-low/80 p-6 backdrop-blur-md">
+        <MotionCard className="mouse-glow haptic-hover lg:col-span-2 rounded-xl border border-outline-variant/15 bg-surface-container-low/80 p-6 backdrop-blur-md" delay={0.12}>
           <div className="mb-6 flex items-center justify-between">
             <h3 className="font-headline text-lg font-bold text-on-surface">
               Processing Funnel
@@ -119,9 +120,9 @@ export default function DashboardPage() {
               </div>
             ))}
           </div>
-        </div>
+        </MotionCard>
 
-        <div className="mouse-glow reveal haptic-hover animate-fade-in-up delay-200 rounded-xl border border-outline-variant/10 bg-surface-container-lowest/80 p-6 backdrop-blur-md">
+        <MotionCard className="mouse-glow haptic-hover rounded-xl border border-outline-variant/10 bg-surface-container-lowest/80 p-6 backdrop-blur-md" delay={0.18}>
           <h3 className="font-headline text-lg font-bold text-on-surface mb-6">
             Live Operations
           </h3>
@@ -160,9 +161,8 @@ export default function DashboardPage() {
               </div>
             ))}
           </div>
-        </div>
+        </MotionCard>
       </div>
     </div>
   );
 }
-

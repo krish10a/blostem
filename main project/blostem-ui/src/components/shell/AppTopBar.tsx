@@ -2,6 +2,7 @@
 
 import Link from "next/link";
 import { usePathname } from "next/navigation";
+import { motion, useReducedMotion } from "motion/react";
 import { MaterialIcon } from "./MaterialIcon";
 
 const TITLES: Record<
@@ -37,6 +38,7 @@ const TITLES: Record<
 
 export function AppTopBar({ onMenuToggle }: { onMenuToggle: () => void }) {
   const pathname = usePathname();
+  const reduceMotion = useReducedMotion();
   const content = TITLES[pathname] ?? {
     eyebrow: "Workspace",
     title: "Sovereign Command",
@@ -44,23 +46,28 @@ export function AppTopBar({ onMenuToggle }: { onMenuToggle: () => void }) {
   };
 
   return (
-    <header className="sticky top-3 z-30 rounded-[26px] border border-white/8 bg-[#0b1326]/72 px-4 py-4 shadow-[0_20px_50px_rgba(6,14,32,0.4)] backdrop-blur-2xl sm:px-5 lg:top-4 lg:px-6">
+    <motion.header
+      className="glass-nav sticky top-3 z-30 rounded-[28px] px-4 py-4 sm:px-5 lg:top-4 lg:px-6"
+      initial={reduceMotion ? undefined : { opacity: 0, y: -18 }}
+      animate={reduceMotion ? undefined : { opacity: 1, y: 0 }}
+      transition={reduceMotion ? undefined : { duration: 0.5, ease: [0.16, 1, 0.3, 1] }}
+    >
       <div className="flex flex-col gap-4 xl:flex-row xl:items-center xl:justify-between">
         <div className="flex items-start gap-3 sm:gap-4">
           <button
             type="button"
             onClick={onMenuToggle}
-            className="inline-flex h-11 w-11 shrink-0 items-center justify-center rounded-2xl border border-white/8 bg-white/5 text-slate-200 transition-colors hover:bg-white/10 lg:hidden"
+            className="glass-button inline-flex h-11 w-11 shrink-0 items-center justify-center rounded-2xl text-slate-200 transition-colors hover:bg-white/10 lg:hidden"
             aria-label="Open navigation"
           >
             <MaterialIcon name="menu" className="text-[20px]" />
           </button>
 
           <div className="min-w-0">
-            <p className="font-label mb-1 text-[10px] font-semibold uppercase tracking-[0.28em] text-primary sm:text-xs">
+            <p className="font-mono-ui mb-1 text-[10px] font-semibold uppercase tracking-[0.28em] text-primary sm:text-xs">
               {content.eyebrow}
             </p>
-            <h2 className="font-headline text-2xl font-extrabold tracking-tight text-on-surface sm:text-[2rem]">
+            <h2 className="font-headline text-gradient text-2xl font-extrabold tracking-tight sm:text-[2rem]">
               {content.title}
             </h2>
             <p className="mt-1 max-w-2xl text-sm leading-relaxed text-on-surface-variant">
@@ -75,7 +82,7 @@ export function AppTopBar({ onMenuToggle }: { onMenuToggle: () => void }) {
               <MaterialIcon name="search" className="text-outline text-sm" />
             </span>
             <input
-              className="w-full rounded-2xl border border-outline-variant/15 bg-surface-container-low/50 py-2.5 pl-9 pr-4 text-sm text-on-surface placeholder:text-outline transition-all hover:bg-surface-container-low/80 focus:border-primary focus:ring-2 focus:ring-surface-tint/20"
+              className="glass-button w-full rounded-2xl py-2.5 pl-9 pr-4 text-sm text-on-surface placeholder:text-outline transition-all hover:bg-surface-container-low/80 focus:border-primary focus:ring-2 focus:ring-surface-tint/20"
               placeholder="Search accounts, personas, or exports..."
               type="text"
             />
@@ -84,25 +91,25 @@ export function AppTopBar({ onMenuToggle }: { onMenuToggle: () => void }) {
           <div className="flex items-center gap-2 sm:justify-end">
             <Link
               href="/features"
-              className="hidden rounded-2xl border border-white/8 bg-white/5 px-4 py-2.5 text-sm font-medium text-slate-200 transition-colors hover:bg-white/10 sm:inline-flex sm:items-center sm:gap-2"
+              className="glass-button hidden rounded-2xl px-4 py-2.5 text-sm font-medium text-slate-200 transition-colors hover:bg-white/10 sm:inline-flex sm:items-center sm:gap-2"
             >
               <MaterialIcon name="auto_stories" className="text-[18px]" />
               View Flow
             </Link>
 
-            <button className="haptic-hover flex h-11 w-11 items-center justify-center rounded-2xl border border-outline-variant/15 bg-surface-container-low/50 transition-colors hover:bg-surface-container-high">
+            <button className="glass-button haptic-hover flex h-11 w-11 items-center justify-center rounded-2xl transition-colors hover:bg-surface-container-high">
               <MaterialIcon name="notifications" className="text-on-surface text-lg" />
             </button>
 
-            <div className="hidden items-center gap-2 rounded-2xl border border-white/8 bg-white/5 px-3 py-2 sm:flex">
+            <div className="glass-button hidden items-center gap-2 rounded-2xl px-3 py-2 sm:flex">
               <span className="h-2 w-2 rounded-full bg-secondary shadow-[0_0_10px_#4edea3]" />
-              <span className="font-label text-xs uppercase tracking-[0.2em] text-slate-300">
+              <span className="font-mono-ui text-xs uppercase tracking-[0.2em] text-slate-300">
                 Live
               </span>
             </div>
           </div>
         </div>
       </div>
-    </header>
+    </motion.header>
   );
 }

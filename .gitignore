@@ -31,6 +31,14 @@ dist/
 Thumbs.db
 *.pem
 *.key
+tobedone.md
+blostem_brain.md
+main project/current_project_state.txt
+demo glass ui/
+stitch_blostem_ai_prospect_intelligence/
+main project/blostem-backend/check_models.py
+main project/blostem-backend/check_models_refined.py
+main project/blostem-backend/blostem.db
 
 # IDEs
 .vscode/
