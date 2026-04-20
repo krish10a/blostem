@@ -1,39 +1,57 @@
-import datetime
-from sqlalchemy import Column, Integer, String, Float, DateTime, Text
-from database import Base
+from datetime import datetime
+from sqlalchemy import Column, Integer, String, Boolean, DateTime, JSON, ForeignKey, Float
+from sqlalchemy.orm import relationship
+from .database import Base
 
 class Prospect(Base):
     __tablename__ = "prospects"
 
     id = Column(Integer, primary_key=True, index=True)
-    company_name = Column(String, index=True, nullable=False)
-    website = Column(String, nullable=True)
-    industry = Column(String, nullable=True)
-    size = Column(String, nullable=True)
-
-    # Signals summary
-    signals = Column(Text, nullable=True) # Stored as JSON string or plain text
+    # Added owner_id for multi-tenancy with Supabase
+    owner_id = Column(String, index=True, nullable=False)
     
-    # Lead Scoring
-    fit_score = Column(Float, nullable=True)
-    intent_score = Column(Float, nullable=True)
-    priority_score = Column(Float, nullable=True)
-    confidence_score = Column(Float, nullable=True)
-
-    # Generated output (Stored as JSON strings)
-    score_explanation = Column(Text, nullable=True)
-    persona_map = Column(Text, nullable=True) 
-    messages = Column(Text, nullable=True)
-    sequence_plan = Column(Text, nullable=True)
-
-    # Module 6: Sequence Lifecycle Tracking
-    # Possible values: None (not yet drafted), "DRAFTED", "APPROVED"
-    outreach_status = Column(String, nullable=True, default=None)
+    first_name = Column(String)
+    last_name = Column(String)
+    email = Column(String, unique=True, index=True)
+    company = Column(String)
+    title = Column(String)
+    linkedin_url = Column(String)
+    location = Column(String)
+    industry = Column(String)
     
-    # AI recommendations and checks
-    compliance_status = Column(String, nullable=True)
-    next_action = Column(String, nullable=True)
+    # Enrichment Status
+    is_enriched = Column(Boolean, default=False)
+    enrichment_status = Column(String, default="pending") # pending, processing, completed, failed
+    last_enriched_at = Column(DateTime, nullable=True)
+    
+    # Lead Score
+    lead_score = Column(Float, default=0.0)
+    score_justification = Column(String, nullable=True)
+    
+    # Raw & Analyzed Data
+    raw_data = Column(JSON, nullable=True)
+    analyzed_data = Column(JSON, nullable=True)
+    
+    # Timeline & Metadata
+    created_at = Column(DateTime, default=datetime.utcnow)
+    updated_at = Column(DateTime, default=datetime.utcnow, onupdate=datetime.utcnow)
+    
+    # Relationships
+    outreach_events = relationship("OutreachEvent", back_populates="prospect", cascade="all, delete-orphan")
 
-    # Timestamps
-    created_at = Column(DateTime, default=datetime.datetime.utcnow)
-    updated_at = Column(DateTime, default=datetime.datetime.utcnow, onupdate=datetime.datetime.utcnow)
+class OutreachEvent(Base):
+    __tablename__ = "outreach_events"
+
+    id = Column(Integer, primary_key=True, index=True)
+    prospect_id = Column(Integer, ForeignKey("prospects.id"))
+    
+    type = Column(String) # email, linkedin_message, connection_request
+    status = Column(String) # pending, scheduled, sent, opened, replied
+    content = Column(String)
+    
+    scheduled_at = Column(DateTime, nullable=True)
+    sent_at = Column(DateTime, nullable=True)
+    created_at = Column(DateTime, default=datetime.utcnow)
+
+    # Relationships
+    prospect = relationship("Prospect", back_populates="outreach_events")

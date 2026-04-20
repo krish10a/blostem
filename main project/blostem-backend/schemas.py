@@ -27,6 +27,7 @@ class ProspectUpdate(BaseModel):
 
 class ProspectResponse(ProspectBase):
     id: int
+    owner_id: str
     signals: Optional[str] = None
     fit_score: Optional[float] = None
     intent_score: Optional[float] = None

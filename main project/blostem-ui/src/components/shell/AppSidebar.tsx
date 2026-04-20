@@ -6,6 +6,10 @@ import { X } from "lucide-react";
 import { motion, useReducedMotion } from "motion/react";
 import { MaterialIcon } from "./MaterialIcon";
 import { cn } from "@/lib/utils";
+import { createClient } from "@/lib/supabase";
+import { useEffect, useState } from "react";
+import { User } from "@supabase/supabase-js";
+import { useRouter } from "next/navigation";
 
 type NavItem = { href: string; label: string; icon: string };
 
@@ -30,7 +34,29 @@ export function AppSidebar({
   onClose: () => void;
 }) {
   const pathname = usePathname();
+  const router = useRouter();
   const reduceMotion = useReducedMotion();
+  const [user, setUser] = useState<User | null>(null);
+  const supabase = createClient();
+
+  useEffect(() => {
+    const getUser = async () => {
+      const { data: { user } } = await supabase.auth.getUser();
+      setUser(user);
+    };
+    getUser();
+
+    const { data: { subscription } } = supabase.auth.onAuthStateChange((_event, session) => {
+      setUser(session?.user ?? null);
+    });
+
+    return () => subscription.unsubscribe();
+  }, [supabase]);
+
+  const handleLogout = async () => {
+    await supabase.auth.signOut();
+    router.push("/login");
+  };
 
   return (
     <>
@@ -194,6 +220,35 @@ export function AppSidebar({
               <MaterialIcon name="settings" className="shrink-0 text-[18px]" />
               <span className="font-label text-xs tracking-wide">Settings</span>
             </Link>
+
+            {user && (
+              <div className="mt-6 pt-4 border-t border-white/8">
+                <div className="flex items-center gap-3 px-2 mb-4">
+                  <div className="w-10 h-10 rounded-xl bg-gradient-to-br from-indigo-500 to-purple-600 flex items-center justify-center text-white font-bold text-sm shadow-lg overflow-hidden">
+                    {user.user_metadata.avatar_url ? (
+                      <img src={user.user_metadata.avatar_url} alt="User" />
+                    ) : (
+                      user.email?.[0].toUpperCase()
+                    )}
+                  </div>
+                  <div className="min-w-0">
+                    <div className="text-xs font-bold text-white truncate">
+                      {user.user_metadata.full_name || user.email?.split('@')[0]}
+                    </div>
+                    <div className="text-[10px] text-slate-500 truncate">
+                      {user.email}
+                    </div>
+                  </div>
+                </div>
+                <button 
+                  onClick={handleLogout}
+                  className="w-full flex items-center gap-3 rounded-2xl px-4 py-2.5 text-red-400 bg-red-400/5 hover:bg-red-400/10 transition-colors group"
+                >
+                  <MaterialIcon name="logout" className="shrink-0 text-[18px] group-hover:translate-x-1 transition-transform" />
+                  <span className="font-label text-xs font-semibold tracking-wide">Sign Out</span>
+                </button>
+              </div>
+            )}
           </div>
         </div>
       </motion.nav>

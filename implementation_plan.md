@@ -43,6 +43,45 @@ A workflow to create email or LinkedIn-style outreach sequences with compliance-
 A recommendations page showing who to contact now, who to nurture, and who to deprioritize.
 6.	Analytics Dashboard
 Conversion metrics, reply rate, sequence performance, and lead funnel insights.
+
+## Phase 2: Backend Cloud Migration & Security
+
+### [MODIFY] [AppSidebar.tsx](file:///c:/Users/ASUS/Desktop/blostem/main project/blostem-ui/src/components/shell/AppSidebar.tsx)
+- Integrated Supabase user state and Sign Out button.
+
+### [MODIFY] [requirements.txt](file:///c:/Users/ASUS/Desktop/blostem/main project/blostem-backend/requirements.txt)
+- Added `psycopg2-binary` for PostgreSQL support.
+- Added `python-jose[cryptography]` for JWT verification.
+
+### [MODIFY] [database.py](file:///c:/Users/ASUS/Desktop/blostem/main project/blostem-backend/database.py)
+- Switch from SQLite to PostgreSQL.
+- Use `DATABASE_URL` from environment variables.
+
+### [NEW] [auth_utils.py](file:///c:/Users/ASUS/Desktop/blostem/main project/blostem-backend/auth_utils.py)
+- Implement `get_current_user` dependency.
+- Use `jose` to verify JWTs signed by Supabase.
+
+### [MODIFY] [models.py](file:///c:/Users/ASUS/Desktop/blostem/main project/blostem-backend/models.py)
+- Add `owner_id` to `Prospect` table for multi-tenancy.
+
+### [MODIFY] [routers/prospects.py](file:///c:/Users/ASUS/Desktop/blostem/main project/blostem-backend/routers/prospects.py)
+- Update endpoints to filter by `owner_id`.
+- Inject `current_user` dependency to all protected routes.
+
+## Open Questions
+
+> [!IMPORTANT]
+> **Supabase JWT Secret**: I will need the `JWT Secret` from your Supabase Project Settings (Settings -> API) to allow the backend to verify tokens. I'll use an environment variable `SUPABASE_JWT_SECRET` for this.
+
+## Verification Plan
+
+### Automated Tests
+- `pytest` for backend route protection (mocking JWTs).
+- Browser testing of the login flow and data isolation.
+
+### Manual Verification
+- Test Google Login on the hosted Vercel URL.
+- Verify that prospects created by one user are NOT visible to another user.
 ________________________________________
 5. Core User Flow / Workflow
 The MVP should follow this end-to-end workflow:

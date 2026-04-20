@@ -11,6 +11,7 @@ from openpyxl.styles import Font, PatternFill, Alignment
 from openpyxl.utils import get_column_letter
 
 from database import get_db
+from auth_utils import get_owner_id
 import models, schemas
 
 router = APIRouter(
@@ -204,9 +205,12 @@ def generate_prospect_xlsx(prospects: List[models.Prospect]):
 
 
 @router.get("/export")
-def export_approved_sequences(db: Session = Depends(get_db)):
+def export_approved_sequences(db: Session = Depends(get_db), owner_id: str = Depends(get_owner_id)):
     """Export all APPROVED prospects to XLSX."""
-    approved = db.query(models.Prospect).filter(models.Prospect.outreach_status == "APPROVED").all()
+    approved = db.query(models.Prospect).filter(
+        models.Prospect.owner_id == owner_id,
+        models.Prospect.outreach_status == "APPROVED"
+    ).all()
     if not approved:
         raise HTTPException(status_code=404, detail="No approved sequences found. Approve at least one prospect first.")
 
@@ -218,9 +222,9 @@ def export_approved_sequences(db: Session = Depends(get_db)):
     )
 
 @router.get("/export-all")
-def export_all_prospects(db: Session = Depends(get_db)):
+def export_all_prospects(db: Session = Depends(get_db), owner_id: str = Depends(get_owner_id)):
     """Export all prospects to XLSX regardless of approval status."""
-    all_prospects = db.query(models.Prospect).all()
+    all_prospects = db.query(models.Prospect).filter(models.Prospect.owner_id == owner_id).all()
     if not all_prospects:
         raise HTTPException(status_code=404, detail="No prospects found to export. Add some prospects first.")
 
@@ -232,9 +236,9 @@ def export_all_prospects(db: Session = Depends(get_db)):
     )
 
 @router.get("/export-json")
-def export_all_json(db: Session = Depends(get_db)):
+def export_all_json(db: Session = Depends(get_db), owner_id: str = Depends(get_owner_id)):
     """Export all prospects as a downloadable JSON file for CRM import or external use."""
-    all_prospects = db.query(models.Prospect).all()
+    all_prospects = db.query(models.Prospect).filter(models.Prospect.owner_id == owner_id).all()
     if not all_prospects:
         raise HTTPException(status_code=404, detail="No prospects to export.")
 
@@ -293,9 +297,9 @@ def export_all_json(db: Session = Depends(get_db)):
     )
 
 @router.get("/export-csv")
-def export_all_csv(db: Session = Depends(get_db)):
+def export_all_csv(db: Session = Depends(get_db), owner_id: str = Depends(get_owner_id)):
     """Export all prospects as a downloadable CSV (flat columns for CRM import)."""
-    all_prospects = db.query(models.Prospect).all()
+    all_prospects = db.query(models.Prospect).filter(models.Prospect.owner_id == owner_id).all()
     if not all_prospects:
         raise HTTPException(status_code=404, detail="No prospects to export.")
 
@@ -371,9 +375,9 @@ def export_all_csv(db: Session = Depends(get_db)):
 # ── MODULE 9: Analytics ──────────────────────────────────────────────────────
 
 @router.get("/analytics", response_model=schemas.AnalyticsSummary)
-def get_analytics(db: Session = Depends(get_db)):
+def get_analytics(db: Session = Depends(get_db), owner_id: str = Depends(get_owner_id)):
     """Return aggregate dashboard analytics for the UI."""
-    all_p = db.query(models.Prospect).all()
+    all_p = db.query(models.Prospect).filter(models.Prospect.owner_id == owner_id).all()
 
     scored      = [p for p in all_p if p.priority_score is not None]
     with_persona = [p for p in all_p if p.persona_map]
@@ -461,22 +465,22 @@ def get_analytics(db: Session = Depends(get_db)):
 # ── MODULE 1: Prospect CRUD ──────────────────────────────────────────────────
 
 @router.post("/", response_model=schemas.ProspectResponse)
-def create_prospect(prospect: schemas.ProspectCreate, db: Session = Depends(get_db)):
+def create_prospect(prospect: schemas.ProspectCreate, db: Session = Depends(get_db), owner_id: str = Depends(get_owner_id)):
     """Create a single prospect manually."""
-    db_prospect = models.Prospect(**prospect.model_dump())
+    db_prospect = models.Prospect(**prospect.model_dump(), owner_id=owner_id)
     db.add(db_prospect)
     db.commit()
     db.refresh(db_prospect)
     return db_prospect
 
 @router.get("/", response_model=List[schemas.ProspectResponse])
-def get_prospects(skip: int = 0, limit: int = 100, db: Session = Depends(get_db)):
-    """List all prospects, ordered by creation date."""
-    prospects = db.query(models.Prospect).offset(skip).limit(limit).all()
+def get_prospects(skip: int = 0, limit: int = 100, db: Session = Depends(get_db), owner_id: str = Depends(get_owner_id)):
+    """List all prospects for the current user, ordered by creation date."""
+    prospects = db.query(models.Prospect).filter(models.Prospect.owner_id == owner_id).offset(skip).limit(limit).all()
     return prospects
 
 @router.post("/upload/")
-async def upload_csv(file: UploadFile = File(...), db: Session = Depends(get_db)):
+async def upload_csv(file: UploadFile = File(...), db: Session = Depends(get_db), owner_id: str = Depends(get_owner_id)):
     """
     Upload a CSV file to bulk-ingest prospects.
     Expects columns: company_name (required), website, industry, size.
@@ -523,6 +527,7 @@ async def upload_csv(file: UploadFile = File(...), db: Session = Depends(get_db)
             "website":  (row.get(MAP["website"], "").strip() if MAP["website"] else "") or None,
             "industry": (row.get(MAP["industry"], "").strip() if MAP["industry"] else "") or None,
             "size":     (row.get(MAP["size"], "").strip() if MAP["size"] else "") or None,
+            "owner_id": owner_id,
         }
         db.add(models.Prospect(**prospect_data))
         added_count += 1
@@ -535,9 +540,12 @@ async def upload_csv(file: UploadFile = File(...), db: Session = Depends(get_db)
     }
 
 @router.delete("/{prospect_id}", status_code=204)
-def delete_prospect(prospect_id: int, db: Session = Depends(get_db)):
+def delete_prospect(prospect_id: int, db: Session = Depends(get_db), owner_id: str = Depends(get_owner_id)):
     """Delete a prospect and all its associated data."""
-    prospect = db.query(models.Prospect).filter(models.Prospect.id == prospect_id).first()
+    prospect = db.query(models.Prospect).filter(
+        models.Prospect.id == prospect_id,
+        models.Prospect.owner_id == owner_id
+    ).first()
     if not prospect:
         raise HTTPException(status_code=404, detail="Prospect not found.")
     db.delete(prospect)
@@ -545,16 +553,19 @@ def delete_prospect(prospect_id: int, db: Session = Depends(get_db)):
     return None
 
 @router.post("/batch-delete", status_code=204)
-def batch_delete_prospects(request: schemas.BatchActionRequest, db: Session = Depends(get_db)):
+def batch_delete_prospects(request: schemas.BatchActionRequest, db: Session = Depends(get_db), owner_id: str = Depends(get_owner_id)):
     """Delete multiple prospects at once."""
     if not request.ids:
         return None
-    db.query(models.Prospect).filter(models.Prospect.id.in_(request.ids)).delete(synchronize_session=False)
+    db.query(models.Prospect).filter(
+        models.Prospect.id.in_(request.ids),
+        models.Prospect.owner_id == owner_id
+    ).delete(synchronize_session=False)
     db.commit()
     return None
 
 @router.post("/seed-sample-data", status_code=201)
-def seed_sample_data(db: Session = Depends(get_db)):
+def seed_sample_data(db: Session = Depends(get_db), owner_id: str = Depends(get_owner_id)):
     """Inject 10 high-quality mock Fintech prospects for demo purposes."""
     sample_data = [
         {"company_name": "Stripe", "website": "stripe.com", "industry": "Payments", "size": "5000-10000"},
@@ -572,9 +583,12 @@ def seed_sample_data(db: Session = Depends(get_db)):
     added = 0
     for data in sample_data:
         # Check if already exists to avoid duplicates
-        exists = db.query(models.Prospect).filter(models.Prospect.company_name == data["company_name"]).first()
+        exists = db.query(models.Prospect).filter(
+            models.Prospect.company_name == data["company_name"],
+            models.Prospect.owner_id == owner_id
+        ).first()
         if not exists:
-            db.add(models.Prospect(**data))
+            db.add(models.Prospect(**data, owner_id=owner_id))
             added += 1
     
     db.commit()
@@ -583,14 +597,17 @@ def seed_sample_data(db: Session = Depends(get_db)):
 # ── MODULE 2: Signal Intelligence ────────────────────────────────────────────
 
 @router.post("/{prospect_id}/generate-signals", response_model=schemas.ProspectResponse)
-def generate_signals(prospect_id: int, setup: schemas.SignalGenerationRequest, db: Session = Depends(get_db)):
+def generate_signals(prospect_id: int, setup: schemas.SignalGenerationRequest, db: Session = Depends(get_db), owner_id: str = Depends(get_owner_id)):
     """
     Generate AI-powered market signals for a prospect using Gemini + Google Search.
     manual_context is optional — omit or pass empty string.
     """
     from services.ai_service import generate_prospect_signals
 
-    prospect = db.query(models.Prospect).filter(models.Prospect.id == prospect_id).first()
+    prospect = db.query(models.Prospect).filter(
+        models.Prospect.id == prospect_id,
+        models.Prospect.owner_id == owner_id
+    ).first()
     if not prospect:
         raise HTTPException(status_code=404, detail="Prospect not found.")
 
@@ -616,14 +633,17 @@ def generate_signals(prospect_id: int, setup: schemas.SignalGenerationRequest, d
 # ── MODULE 3: Lead Scoring ────────────────────────────────────────────────────
 
 @router.post("/{prospect_id}/score", response_model=schemas.ProspectResponse)
-def score_prospect(prospect_id: int, db: Session = Depends(get_db)):
+def score_prospect(prospect_id: int, db: Session = Depends(get_db), owner_id: str = Depends(get_owner_id)):
     """
     Run the weighted lead scoring algorithm.
     Requires: signals must be generated first (400 if not).
     """
     from services.ai_service import generate_lead_score
 
-    prospect = db.query(models.Prospect).filter(models.Prospect.id == prospect_id).first()
+    prospect = db.query(models.Prospect).filter(
+        models.Prospect.id == prospect_id,
+        models.Prospect.owner_id == owner_id
+    ).first()
     if not prospect:
         raise HTTPException(status_code=404, detail="Prospect not found.")
     if not prospect.signals:
@@ -649,14 +669,17 @@ def score_prospect(prospect_id: int, db: Session = Depends(get_db)):
 # ── MODULE 4: Persona Mapping ─────────────────────────────────────────────────
 
 @router.post("/{prospect_id}/map-personas", response_model=schemas.ProspectResponse)
-def map_personas(prospect_id: int, db: Session = Depends(get_db)):
+def map_personas(prospect_id: int, db: Session = Depends(get_db), owner_id: str = Depends(get_owner_id)):
     """
     Map key stakeholder personas based on signals.
     Requires: signals must be generated first (400 if not).
     """
     from services.ai_service import generate_persona_mapping
 
-    prospect = db.query(models.Prospect).filter(models.Prospect.id == prospect_id).first()
+    prospect = db.query(models.Prospect).filter(
+        models.Prospect.id == prospect_id,
+        models.Prospect.owner_id == owner_id
+    ).first()
     if not prospect:
         raise HTTPException(status_code=404, detail="Prospect not found.")
     if not prospect.signals:
@@ -679,7 +702,7 @@ def map_personas(prospect_id: int, db: Session = Depends(get_db)):
 # ── MODULE 5: Outreach Generation ────────────────────────────────────────────
 
 @router.post("/{prospect_id}/generate-outreach", response_model=schemas.ProspectResponse)
-def generate_outreach(prospect_id: int, db: Session = Depends(get_db)):
+def generate_outreach(prospect_id: int, db: Session = Depends(get_db), owner_id: str = Depends(get_owner_id)):
     """
     Generate persona-aware outreach sequences.
     Requires: persona_map must be generated first (400 if not).
@@ -687,7 +710,10 @@ def generate_outreach(prospect_id: int, db: Session = Depends(get_db)):
     """
     from services.ai_service import generate_outreach_sequence
 
-    prospect = db.query(models.Prospect).filter(models.Prospect.id == prospect_id).first()
+    prospect = db.query(models.Prospect).filter(
+        models.Prospect.id == prospect_id,
+        models.Prospect.owner_id == owner_id
+    ).first()
     if not prospect:
         raise HTTPException(status_code=404, detail="Prospect not found.")
     if not prospect.persona_map:
@@ -742,7 +768,7 @@ def generate_outreach(prospect_id: int, db: Session = Depends(get_db)):
 
 
 @router.post("/{prospect_id}/approve", response_model=schemas.ProspectResponse)
-def approve_sequence(prospect_id: int, request: schemas.ApproveSequenceRequest, db: Session = Depends(get_db)):
+def approve_sequence(prospect_id: int, request: schemas.ApproveSequenceRequest, db: Session = Depends(get_db), owner_id: str = Depends(get_owner_id)):
     """
     Toggle the outreach sequence approval status.
     If approving: calls AI to build the multi-day sequence plan (Module 7).
@@ -750,7 +776,10 @@ def approve_sequence(prospect_id: int, request: schemas.ApproveSequenceRequest, 
     """
     from services.ai_service import generate_sequence_timeline
 
-    prospect = db.query(models.Prospect).filter(models.Prospect.id == prospect_id).first()
+    prospect = db.query(models.Prospect).filter(
+        models.Prospect.id == prospect_id,
+        models.Prospect.owner_id == owner_id
+    ).first()
     if not prospect:
         raise HTTPException(status_code=404, detail="Prospect not found.")
     
