@@ -1,0 +1,18 @@
+services:
+  - type: web
+    name: blostem-backend
+    env: python
+    buildCommand: pip install -r requirements.txt
+    startCommand: uvicorn main:app --host 0.0.0.0 --port $PORT
+    rootDirectory: app-core/blostem-backend
+    envVars:
+      - key: PYTHON_VERSION
+        value: 3.10.0
+      - key: DATABASE_URL
+        sync: false # Set via Render Dashboard
+      - key: SUPABASE_JWT_SECRET
+        sync: false # Set via Render Dashboard
+      - key: GEMINI_API_KEY_1
+        sync: false # Set via Render Dashboard
+      - key: GEMINI_API_KEY_2
+        sync: false # Set via Render Dashboard
