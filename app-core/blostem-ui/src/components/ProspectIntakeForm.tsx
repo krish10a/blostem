@@ -6,6 +6,7 @@ import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { Label } from "@/components/ui/label";
 import { AlertCircle } from "lucide-react";
+import { fetchWithAuth } from "@/lib/api";
 
 export default function ProspectIntakeForm({ onProspectAdded }: { onProspectAdded?: () => void }) {
   const [loading, setLoading] = useState(false);
@@ -23,9 +24,8 @@ export default function ProspectIntakeForm({ onProspectAdded }: { onProspectAdde
     setLoading(true);
     setError(null);
     try {
-      const res = await fetch(`${process.env.NEXT_PUBLIC_BACKEND_URL}/prospects/`, {
+      const res = await fetchWithAuth("/prospects/", {
         method: "POST",
-        headers: { "Content-Type": "application/json" },
         body: JSON.stringify(formData)
       });
       if (res.ok) {

@@ -3,6 +3,7 @@
 import { useState } from "react";
 import { AlertCircle, RefreshCw, Users } from "lucide-react";
 import { MotionButton, MotionCard, MotionGroup } from "@/components/motion/BlostemMotion";
+import { fetchWithAuth } from "@/lib/api";
 
 type Persona = {
   persona_name: string;
@@ -58,7 +59,7 @@ export default function PersonaMappingPanel({ prospect, onPersonasGenerated }: P
     setError(null);
 
     try {
-      const res = await fetch(`${process.env.NEXT_PUBLIC_BACKEND_URL}/prospects/${prospect.id}/map-personas`, {
+      const res = await fetchWithAuth(`/prospects/${prospect.id}/map-personas`, {
         method: "POST",
       });
 

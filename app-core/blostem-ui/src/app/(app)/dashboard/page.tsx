@@ -4,6 +4,7 @@ import { useEffect, useState } from "react";
 import Link from "next/link";
 import { MotionCard, MotionGroup } from "@/components/motion/BlostemMotion";
 import { MaterialIcon } from "@/components/shell/MaterialIcon";
+import { fetchWithAuth } from "@/lib/api";
 
 type Summary = {
   total_prospects: number;
@@ -20,7 +21,7 @@ export default function DashboardPage() {
     let cancelled = false;
     (async () => {
       try {
-        const res = await fetch(`${process.env.NEXT_PUBLIC_BACKEND_URL}/prospects/analytics`);
+        const res = await fetchWithAuth("/prospects/analytics");
         if (!res.ok) return;
         const json = (await res.json()) as Summary;
         if (!cancelled) setSummary(json);

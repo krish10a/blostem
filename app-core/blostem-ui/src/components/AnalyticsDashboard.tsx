@@ -21,6 +21,7 @@ import {
   YAxis,
 } from "recharts";
 import { MotionCard, MotionGroup, MotionSection } from "@/components/motion/BlostemMotion";
+import { fetchWithAuth } from "@/lib/api";
 
 interface AnalyticsSummary {
   total_prospects: number;
@@ -120,7 +121,7 @@ export default function AnalyticsDashboard() {
     if (showLoading) setLoading(true);
     setError(null);
     try {
-      const res = await fetch(`${process.env.NEXT_PUBLIC_BACKEND_URL}/prospects/analytics`);
+      const res = await fetchWithAuth("/prospects/analytics");
       if (!res.ok) throw new Error("Failed to fetch analytics");
       const json = (await res.json()) as AnalyticsSummary;
       setData(json);

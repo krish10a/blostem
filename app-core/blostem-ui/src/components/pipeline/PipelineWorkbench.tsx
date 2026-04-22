@@ -22,6 +22,7 @@ import SequenceTimeline from "@/components/SequenceTimeline";
 import SignalIntelligencePanel from "@/components/SignalIntelligencePanel";
 import { DashboardSkeleton } from "@/components/LoadingSkeleton";
 import { MotionButton, MotionCard, MotionGroup, MotionSection } from "@/components/motion/BlostemMotion";
+import { fetchWithAuth } from "@/lib/api";
 
 type Prospect = {
   id: number;
@@ -106,7 +107,7 @@ export default function PipelineWorkbench() {
   const fetchProspects = async (showRefreshing = true) => {
     if (showRefreshing) setIsRefreshing(true);
     try {
-      const res = await fetch(`${process.env.NEXT_PUBLIC_BACKEND_URL}/prospects/`);
+      const res = await fetchWithAuth("/prospects/");
       if (res.ok) {
         let data: Prospect[] = await res.json();
         data = data.map(normalizeProspect);
@@ -143,7 +144,7 @@ export default function PipelineWorkbench() {
     if (!confirm("Delete this prospect and all its data?")) return;
     setDeletingId(id);
     try {
-      const res = await fetch(`${process.env.NEXT_PUBLIC_BACKEND_URL}/prospects/${id}`, { method: "DELETE" });
+      const res = await fetchWithAuth(`/prospects/${id}`, { method: "DELETE" });
       if (res.ok || res.status === 204) {
         setSelectedIds((prev) => {
           const next = new Set(prev);
@@ -168,9 +169,8 @@ export default function PipelineWorkbench() {
     if (!confirm(`Delete ${selectedIds.size} selected prospects?`)) return;
     setIsRefreshing(true);
     try {
-      const res = await fetch(`${process.env.NEXT_PUBLIC_BACKEND_URL}/prospects/batch-delete`, {
+      const res = await fetchWithAuth("/prospects/batch-delete", {
         method: "POST",
-        headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ ids: Array.from(selectedIds) }),
       });
       if (!res.ok) throw new Error("Batch delete failed");
@@ -230,9 +230,8 @@ export default function PipelineWorkbench() {
       if (step.skip) continue;
       setPipelineStep(step.label);
       try {
-        const res = await fetch(`${process.env.NEXT_PUBLIC_BACKEND_URL}/prospects/${current.id}/${step.url}`, {
+        const res = await fetchWithAuth(`/prospects/${current.id}/${step.url}`, {
           method: "POST",
-          headers: { "Content-Type": "application/json" },
           ...(step.body ? { body: JSON.stringify(step.body) } : {}),
         });
         if (!res.ok) {
@@ -351,7 +350,7 @@ export default function PipelineWorkbench() {
                     <button
                       onClick={async () => {
                         if (!confirm("Seed 10 demo prospects?")) return;
-                        await fetch(`${process.env.NEXT_PUBLIC_BACKEND_URL}/prospects/seed-sample-data`, {
+                        await fetchWithAuth("/prospects/seed-sample-data", {
                           method: "POST",
                         });
                         void fetchProspects();

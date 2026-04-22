@@ -6,6 +6,7 @@ import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { Label } from "@/components/ui/label";
 import { AlertCircle } from "lucide-react";
+import { fetchWithAuth } from "@/lib/api";
 
 export default function ProspectCSVUpload({ onProspectAdded }: { onProspectAdded?: () => void }) {
   const [loading, setLoading] = useState(false);
@@ -23,7 +24,7 @@ export default function ProspectCSVUpload({ onProspectAdded }: { onProspectAdded
     formData.append("file", file);
 
     try {
-      const res = await fetch(`${process.env.NEXT_PUBLIC_BACKEND_URL}/prospects/upload/`, {
+      const res = await fetchWithAuth("/prospects/upload/", {
         method: "POST",
         body: formData,
       });
