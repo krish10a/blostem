@@ -5,6 +5,7 @@ node_modules/
 venv/
 env/
 ENV/
+.venv/
 __pycache__/
 *.py[cod]
 *$py.class
@@ -31,14 +32,6 @@ dist/
 Thumbs.db
 *.pem
 *.key
-tobedone.md
-blostem_brain.md
-main project/current_project_state.txt
-demo glass ui/
-stitch_blostem_ai_prospect_intelligence/
-main project/blostem-backend/check_models.py
-main project/blostem-backend/check_models_refined.py
-main project/blostem-backend/blostem.db
 
 # IDEs
 .vscode/
@@ -49,3 +42,6 @@ npm-debug.log*
 yarn-debug.log*
 yarn-error.log*
 .pnpm-debug.log*
+
+# Project Specific
+app-core/blostem-backend/blostem.db

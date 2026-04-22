@@ -46,25 +46,25 @@ Conversion metrics, reply rate, sequence performance, and lead funnel insights.
 
 ## Phase 2: Backend Cloud Migration & Security
 
-### [MODIFY] [AppSidebar.tsx](file:///c:/Users/ASUS/Desktop/blostem/main project/blostem-ui/src/components/shell/AppSidebar.tsx)
+### [MODIFY] [AppSidebar.tsx](file:///c:/Users/ASUS/Desktop/blostem/app-core/blostem-ui/src/components/shell/AppSidebar.tsx)
 - Integrated Supabase user state and Sign Out button.
 
-### [MODIFY] [requirements.txt](file:///c:/Users/ASUS/Desktop/blostem/main project/blostem-backend/requirements.txt)
+### [MODIFY] [requirements.txt](file:///c:/Users/ASUS/Desktop/blostem/app-core/blostem-backend/requirements.txt)
 - Added `psycopg2-binary` for PostgreSQL support.
 - Added `python-jose[cryptography]` for JWT verification.
 
-### [MODIFY] [database.py](file:///c:/Users/ASUS/Desktop/blostem/main project/blostem-backend/database.py)
+### [MODIFY] [database.py](file:///c:/Users/ASUS/Desktop/blostem/app-core/blostem-backend/database.py)
 - Switch from SQLite to PostgreSQL.
 - Use `DATABASE_URL` from environment variables.
 
-### [NEW] [auth_utils.py](file:///c:/Users/ASUS/Desktop/blostem/main project/blostem-backend/auth_utils.py)
+### [NEW] [auth_utils.py](file:///c:/Users/ASUS/Desktop/blostem/app-core/blostem-backend/auth_utils.py)
 - Implement `get_current_user` dependency.
 - Use `jose` to verify JWTs signed by Supabase.
 
-### [MODIFY] [models.py](file:///c:/Users/ASUS/Desktop/blostem/main project/blostem-backend/models.py)
+### [MODIFY] [models.py](file:///c:/Users/ASUS/Desktop/blostem/app-core/blostem-backend/models.py)
 - Add `owner_id` to `Prospect` table for multi-tenancy.
 
-### [MODIFY] [routers/prospects.py](file:///c:/Users/ASUS/Desktop/blostem/main project/blostem-backend/routers/prospects.py)
+### [MODIFY] [routers/prospects.py](file:///c:/Users/ASUS/Desktop/blostem/app-core/blostem-backend/routers/prospects.py)
 - Update endpoints to filter by `owner_id`.
 - Inject `current_user` dependency to all protected routes.
 
@@ -375,7 +375,7 @@ AI / LLM Layer
 •	Prompt templates for scoring and outreach
 •	Structured JSON outputs
 Data / Storage
-•	SQLite for MVP
+•	PostgreSQL (Supabase)
 •	Optional PostgreSQL if needed
 •	Optional vector store if you later add retrieval
 File Handling

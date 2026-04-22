@@ -4,6 +4,7 @@ import re
 import time
 from google import genai
 import httpx
+from openai import OpenAI
 from dotenv import load_dotenv
 
 from schemas import (
@@ -24,6 +25,8 @@ GEMINI_KEYS = [
 GEMINI_KEYS = [k for k in GEMINI_KEYS if k]
 
 MODEL_ID = "gemini-2.0-flash"
+GROQ_API_KEY = os.getenv("GROQ_API_KEY")
+GROQ_MODEL = os.getenv("GROQ_MODEL", "llama-3.3-70b-versatile")
 OLLAMA_MODEL = os.getenv("OLLAMA_MODEL", "gemma2")
 OLLAMA_URL = "http://localhost:11434/api/generate"
 
@@ -82,8 +85,35 @@ def _call_ollama(prompt: str, json_mode: bool = True):
         print(f"ERROR: Local Ollama fallback failed: {str(e)}")
         raise e
 
+def _call_groq(prompt: str, json_mode: bool = True):
+    """Fallback to Groq API (OpenAI compatible)."""
+    if not GROQ_API_KEY:
+        print("DEBUG: Groq API key not found, skipping Groq fallback.")
+        raise ValueError("GROQ_API_KEY not configured")
+    
+    try:
+        print(f"DEBUG: Attempting fallback to Groq (Model: {GROQ_MODEL})")
+        client = OpenAI(
+            base_url="https://api.groq.com/openai/v1",
+            api_key=GROQ_API_KEY
+        )
+        
+        response = client.chat.completions.create(
+            model=GROQ_MODEL,
+            messages=[
+                {"role": "system", "content": "You are a specialized business analyst AI. Respond strictly in JSON format where requested." if json_mode else "You are a specialized business analyst AI."},
+                {"role": "user", "content": prompt}
+            ],
+            response_format={"type": "json_object"} if json_mode else None,
+            temperature=0.1 if json_mode else 0.2,
+        )
+        return response.choices[0].message.content
+    except Exception as e:
+        print(f"ERROR: Groq fallback failed: {str(e)}")
+        raise e
+
 def _call_ai(prompt: str, json_mode: bool = True):
-    """Retries with multiple Gemini API keys if quota/rate limits occur."""
+    """Retries with multiple Gemini API keys and exponential backoff if quota/rate limits occur."""
     last_error = None
     clients = get_clients()
     
@@ -91,9 +121,13 @@ def _call_ai(prompt: str, json_mode: bool = True):
     if clients:
         # Try each API key in sequence (rotation fallback)
         for i, client in enumerate(clients):
-            for attempt in range(2): # Try each key twice if it's a transient error
+            # Exponential backoff parameters
+            base_delay = 2.0  # Start with 2 seconds
+            max_retries = 3
+            
+            for attempt in range(max_retries):
                 try:
-                    print(f"DEBUG: Attempting Gemini call with Key {i+1} (Attempt {attempt+1})")
+                    print(f"DEBUG: Attempting Gemini call with Key {i+1} (Attempt {attempt+1}/{max_retries})")
                     
                     # Gemini 1.0+ SDK call
                     response = client.models.generate_content(
@@ -114,25 +148,64 @@ def _call_ai(prompt: str, json_mode: bool = True):
                     last_error = e
                     err_msg = str(e).lower()
                     
-                    # Check for rate limit / quota issues (ResourceExhausted or 429)
+                    # 1. Check for rate limit / quota issues (429 ResourceExhausted)
                     if "429" in err_msg or "quota" in err_msg or "exhausted" in err_msg or "rate_limit" in err_msg:
-                        print(f"WARNING: Key {i+1} rate-limited or quota exhausted. Switching to next key...")
-                        break # Break inner loop, move to next client
+                        if attempt < max_retries - 1:
+                            wait_time = base_delay * (2 ** attempt) # 2, 4, 8 seconds
+                            print(f"WARNING: Key {i+1} rate-limited. Retrying in {wait_time}s...")
+                            time.sleep(wait_time)
+                            continue # Try again with same key
+                        else:
+                            print(f"WARNING: Key {i+1} exhausted after {max_retries} attempts. Switching to next key...")
+                            break # Move to next key
                     
-                    print(f"ERROR: Key {i+1} failed with error: {str(e)[:100]}. Trying next fallback...")
-                    break # Move to next key for any other error too
+                    # 2. Check for temporary service issues (500, 503, connection)
+                    elif "500" in err_msg or "503" in err_msg or "connection" in err_msg:
+                        print(f"ERROR: Key {i+1} hit service/network error: {err_msg[:60]}. Retrying...")
+                        time.sleep(1)
+                        continue
+                    
+                    # 3. Other errors (Invalid key, etc.)
+                    else:
+                        print(f"ERROR: Key {i+1} failed with non-retryable error: {str(e)[:100]}. Trying next fallback...")
+                        break # Move to next key
                 
-    # Final Fallback to local Ollama
-    print("WARNING: All Gemini API keys failed or were rate-limited. Falling back to local Ollama...")
-    try:
-        response_text = _call_ollama(prompt, json_mode)
-        print(f"DEBUG: RAW OLLAMA RESPONSE: {response_text[:200]}...")
-        return response_text
-    except Exception as ollama_err:
-        print("CRITICAL: Both Gemini AND Ollama systems failed.")
-        if last_error:
-            raise last_error
-        raise ollama_err
+    # 2. Fallback to Groq (reliable cloud fallback)
+    if GROQ_API_KEY:
+        print("WARNING: All Gemini API keys failed or exhausted. Attempting Groq fallback...")
+        try:
+            return _call_groq(prompt, json_mode)
+        except Exception as groq_err:
+            print(f"ERROR: Groq fallback failed: {str(groq_err)}")
+
+    # 3. Final Fallback to local Ollama (only if specifically enabled or local)
+    if os.getenv("ENABLE_OLLAMA_FALLBACK", "false").lower() == "true" or "localhost" in OLLAMA_URL:
+        print("WARNING: Gemini and Groq systems failed. Attempting Ollama fallback...")
+        try:
+            return _call_ollama(prompt, json_mode)
+        except Exception as ollama_err:
+            print(f"CRITICAL: Ollama fallback failed: {str(ollama_err)}")
+            
+    # If we get here, everything failed.
+    # Instead of raising immediately and causing 500s, let's return a safe "Mock" response for UI stability
+    # if it's a JSON request, or raise if we really can't proceed.
+    print("CRITICAL: All AI systems (Gemini & Fallbacks) are unavailable.")
+    
+    if json_mode:
+        # Return a generic "Processing" JSON that won't crash the frontend parser
+        return json.dumps({
+            "signal_summary": "AI services are currently reaching capacity limits. Please try again in a few minutes.",
+            "reason_tags": ["Capacity Reached"],
+            "raw_notes": "The system is experiencing high traffic. Analysis is queued.",
+            "fit_score": 0, "intent_score": 0, "priority_score": 0, "confidence_score": 0,
+            "fintech_relevance": 0, "growth_signals": 0, "product_fit": 0, "hiring_activity": 0, "recency_engagement": 0,
+            "short_justification": "Service temporarily unavailable.",
+            "personas": [], "outreach_payload": [], "sequence_payload": [], "steps": [],
+            "overall_status": "NEEDS_REVIEW", "issues": [], "compliance_summary": "Service busy.", "safe_to_send": False,
+            "action": "Nurture", "reason": "AI capacity reached.", "suggested_owner": "SDR", "suggested_timing": "Later", "priority_label": "Low"
+        })
+    
+    raise last_error or Exception("AI Service Unavailable")
 
 # ─────────────────────────────────────────────────────────────────────────────
 # MODULES
