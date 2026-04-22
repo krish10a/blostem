@@ -106,7 +106,7 @@ export default function PipelineWorkbench() {
   const fetchProspects = async (showRefreshing = true) => {
     if (showRefreshing) setIsRefreshing(true);
     try {
-      const res = await fetch("http://127.0.0.1:8000/prospects/");
+      const res = await fetch(`${process.env.NEXT_PUBLIC_BACKEND_URL}/prospects/`);
       if (res.ok) {
         let data: Prospect[] = await res.json();
         data = data.map(normalizeProspect);
@@ -143,7 +143,7 @@ export default function PipelineWorkbench() {
     if (!confirm("Delete this prospect and all its data?")) return;
     setDeletingId(id);
     try {
-      const res = await fetch(`http://127.0.0.1:8000/prospects/${id}`, { method: "DELETE" });
+      const res = await fetch(`${process.env.NEXT_PUBLIC_BACKEND_URL}/prospects/${id}`, { method: "DELETE" });
       if (res.ok || res.status === 204) {
         setSelectedIds((prev) => {
           const next = new Set(prev);
@@ -168,7 +168,7 @@ export default function PipelineWorkbench() {
     if (!confirm(`Delete ${selectedIds.size} selected prospects?`)) return;
     setIsRefreshing(true);
     try {
-      const res = await fetch("http://127.0.0.1:8000/prospects/batch-delete", {
+      const res = await fetch(`${process.env.NEXT_PUBLIC_BACKEND_URL}/prospects/batch-delete`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ ids: Array.from(selectedIds) }),
@@ -230,7 +230,7 @@ export default function PipelineWorkbench() {
       if (step.skip) continue;
       setPipelineStep(step.label);
       try {
-        const res = await fetch(`http://127.0.0.1:8000/prospects/${current.id}/${step.url}`, {
+        const res = await fetch(`${process.env.NEXT_PUBLIC_BACKEND_URL}/prospects/${current.id}/${step.url}`, {
           method: "POST",
           headers: { "Content-Type": "application/json" },
           ...(step.body ? { body: JSON.stringify(step.body) } : {}),
@@ -351,7 +351,7 @@ export default function PipelineWorkbench() {
                     <button
                       onClick={async () => {
                         if (!confirm("Seed 10 demo prospects?")) return;
-                        await fetch("http://127.0.0.1:8000/prospects/seed-sample-data", {
+                        await fetch(`${process.env.NEXT_PUBLIC_BACKEND_URL}/prospects/seed-sample-data`, {
                           method: "POST",
                         });
                         void fetchProspects();

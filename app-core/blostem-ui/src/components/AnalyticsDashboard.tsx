@@ -120,7 +120,7 @@ export default function AnalyticsDashboard() {
     if (showLoading) setLoading(true);
     setError(null);
     try {
-      const res = await fetch("http://127.0.0.1:8000/prospects/analytics");
+      const res = await fetch(`${process.env.NEXT_PUBLIC_BACKEND_URL}/prospects/analytics`);
       if (!res.ok) throw new Error("Failed to fetch analytics");
       const json = (await res.json()) as AnalyticsSummary;
       setData(json);
