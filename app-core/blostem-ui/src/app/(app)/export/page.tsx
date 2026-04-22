@@ -1,3 +1,5 @@
+"use client";
+
 import { MotionButton, MotionCard, MotionGroup, MotionSection } from "@/components/motion/BlostemMotion";
 import { MaterialIcon } from "@/components/shell/MaterialIcon";
 import { fetchWithAuth } from "@/lib/api";
