@@ -2,6 +2,7 @@
 
 import { useState } from 'react';
 import { Mail, Share2, Sparkles, Building2, Send, Copy, AlertCircle, CheckCircle2, RotateCcw, Phone } from 'lucide-react';
+import { fetchWithAuth } from "@/lib/api";
 
 interface OutreachMessage {
   channel: string;
@@ -55,7 +56,7 @@ export default function OutreachGenerationPanel({ prospect, onUpdate }: Outreach
     setIsGenerating(true);
     setError(null);
     try {
-      const resp = await fetch(`${process.env.NEXT_PUBLIC_BACKEND_URL}/prospects/${prospect.id}/generate-outreach`, {
+      const resp = await fetchWithAuth(`/prospects/${prospect.id}/generate-outreach`, {
         method: 'POST',
       });
       if (!resp.ok) {
@@ -74,7 +75,7 @@ export default function OutreachGenerationPanel({ prospect, onUpdate }: Outreach
     setIsApproving(true);
     setError(null);
     try {
-      const resp = await fetch(`${process.env.NEXT_PUBLIC_BACKEND_URL}/prospects/${prospect.id}/approve`, {
+      const resp = await fetchWithAuth(`/prospects/${prospect.id}/approve`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ approve }),
