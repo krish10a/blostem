@@ -20,7 +20,7 @@ export default function DashboardPage() {
     let cancelled = false;
     (async () => {
       try {
-        const res = await fetch("http://127.0.0.1:8000/prospects/analytics");
+        const res = await fetch(`${process.env.NEXT_PUBLIC_BACKEND_URL}/prospects/analytics`);
         if (!res.ok) return;
         const json = (await res.json()) as Summary;
         if (!cancelled) setSummary(json);

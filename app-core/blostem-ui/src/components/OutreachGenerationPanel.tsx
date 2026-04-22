@@ -55,7 +55,7 @@ export default function OutreachGenerationPanel({ prospect, onUpdate }: Outreach
     setIsGenerating(true);
     setError(null);
     try {
-      const resp = await fetch(`http://127.0.0.1:8000/prospects/${prospect.id}/generate-outreach`, {
+      const resp = await fetch(`${process.env.NEXT_PUBLIC_BACKEND_URL}/prospects/${prospect.id}/generate-outreach`, {
         method: 'POST',
       });
       if (!resp.ok) {
@@ -74,7 +74,7 @@ export default function OutreachGenerationPanel({ prospect, onUpdate }: Outreach
     setIsApproving(true);
     setError(null);
     try {
-      const resp = await fetch(`http://127.0.0.1:8000/prospects/${prospect.id}/approve`, {
+      const resp = await fetch(`${process.env.NEXT_PUBLIC_BACKEND_URL}/prospects/${prospect.id}/approve`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ approve }),

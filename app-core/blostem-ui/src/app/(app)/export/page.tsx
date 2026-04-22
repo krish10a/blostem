@@ -92,7 +92,7 @@ export default function ExportPage() {
           desc="Export the entire unedited dataset, including all raw fields, preliminary flags, and unverified entries."
           whyTitle="Why it matters"
           why="Crucial for deep compliance audits and historical record-keeping. Contains full data lineage before human intervention."
-          href="http://127.0.0.1:8000/prospects/export-all"
+          href={`${process.env.NEXT_PUBLIC_BACKEND_URL}/prospects/export-all`}
         />
         <ExportCard
           icon="verified"
@@ -101,7 +101,7 @@ export default function ExportPage() {
           desc="A sanitized export containing only records that have passed validation rules or received manual approval."
           whyTitle="Why it matters"
           why="The standard format for importing into downstream systems. Ensures only clean, verified data enters your workflow."
-          href="http://127.0.0.1:8000/prospects/export"
+          href={`${process.env.NEXT_PUBLIC_BACKEND_URL}/prospects/export`}
           primary
         />
         <ExportCard
@@ -111,7 +111,7 @@ export default function ExportPage() {
           desc="Structured JSON representation maintaining hierarchical relationships and metadata tags."
           whyTitle="Why it matters"
           why="Ideal for direct API ingestion, custom scripts, or migrating complex relational models without flattening."
-          href="http://127.0.0.1:8000/prospects/export-json"
+          href={`${process.env.NEXT_PUBLIC_BACKEND_URL}/prospects/export-json`}
         />
         <ExportCard
           icon="format_list_bulleted"

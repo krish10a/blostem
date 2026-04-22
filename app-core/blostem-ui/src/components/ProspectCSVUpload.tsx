@@ -23,7 +23,7 @@ export default function ProspectCSVUpload({ onProspectAdded }: { onProspectAdded
     formData.append("file", file);
 
     try {
-      const res = await fetch("http://127.0.0.1:8000/prospects/upload/", {
+      const res = await fetch(`${process.env.NEXT_PUBLIC_BACKEND_URL}/prospects/upload/`, {
         method: "POST",
         body: formData,
       });

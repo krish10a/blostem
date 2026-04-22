@@ -58,7 +58,7 @@ export default function PersonaMappingPanel({ prospect, onPersonasGenerated }: P
     setError(null);
 
     try {
-      const res = await fetch(`http://127.0.0.1:8000/prospects/${prospect.id}/map-personas`, {
+      const res = await fetch(`${process.env.NEXT_PUBLIC_BACKEND_URL}/prospects/${prospect.id}/map-personas`, {
         method: "POST",
       });
 
