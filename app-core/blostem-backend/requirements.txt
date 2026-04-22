@@ -1,0 +1,13 @@
+fastapi
+uvicorn
+sqlalchemy
+pydantic
+pydantic-settings
+python-dotenv
+google-genai
+openpyxl
+python-multipart
+aiofiles
+openai
+psycopg2-binary
+python-jose[cryptography]
