@@ -602,7 +602,7 @@ def generate_signals(prospect_id: int, setup: schemas.SignalGenerationRequest, d
     Generate AI-powered market signals for a prospect using Gemini + Google Search.
     manual_context is optional — omit or pass empty string.
     """
-    from services.ai_service import generate_prospect_signals
+    from services.ai_service import run_intelligence_pipeline
 
     prospect = db.query(models.Prospect).filter(
         models.Prospect.id == prospect_id,
@@ -612,17 +612,31 @@ def generate_signals(prospect_id: int, setup: schemas.SignalGenerationRequest, d
         raise HTTPException(status_code=404, detail="Prospect not found.")
 
     try:
-        signals_output = generate_prospect_signals(
+        # Consolidated Call 1: Signals + Scoring + Persona Mapping
+        intel_data = run_intelligence_pipeline(
             company_name=prospect.company_name,
             industry=prospect.industry,
             size=prospect.size,
             manual_context=setup.manual_context
         )
-        prospect.signals = json.dumps({
-            "signal_summary": signals_output.signal_summary,
-            "reason_tags":    signals_output.reason_tags,
-            "raw_notes":      signals_output.raw_notes,
-        })
+        
+        if "error" in intel_data:
+            raise HTTPException(status_code=500, detail=intel_data["error"])
+
+        # Update Signals
+        prospect.signals = json.dumps(intel_data.get("signals", {}))
+        
+        # Update Scores
+        derived = intel_data.get("derived_scores", {})
+        prospect.fit_score        = derived.get("fit_score")
+        prospect.intent_score     = derived.get("intent_score")
+        prospect.priority_score   = derived.get("priority_score")
+        prospect.confidence_score = derived.get("confidence_score")
+        prospect.score_explanation = derived.get("score_explanation")
+        
+        # Update Personas
+        prospect.persona_map = json.dumps({"personas": intel_data.get("personas", [])})
+
         db.commit()
         db.refresh(prospect)
         return prospect
@@ -708,7 +722,7 @@ def generate_outreach(prospect_id: int, db: Session = Depends(get_db), owner_id:
     Requires: persona_map must be generated first (400 if not).
     Resets outreach_status to DRAFTED and compliance_status to None on regeneration.
     """
-    from services.ai_service import generate_outreach_sequence
+    from services.ai_service import run_execution_pipeline
 
     prospect = db.query(models.Prospect).filter(
         models.Prospect.id == prospect_id,
@@ -717,43 +731,38 @@ def generate_outreach(prospect_id: int, db: Session = Depends(get_db), owner_id:
     if not prospect:
         raise HTTPException(status_code=404, detail="Prospect not found.")
     if not prospect.persona_map:
-        raise HTTPException(status_code=400, detail="No persona map found. Map personas first.")
+        raise HTTPException(status_code=400, detail="No persona map found. Run intelligence first.")
 
     try:
-        outreach_data = generate_outreach_sequence(
+        # Consolidated Call 2: Outreach + Compliance + Next Action + Sequence Timeline
+        exec_data = run_execution_pipeline(
             company_name=prospect.company_name,
             industry=prospect.industry,
-            signals_json=prospect.signals,
-            persona_map_json=prospect.persona_map
+            signals_json=prospect.signals or "{}",
+            persona_map_json=prospect.persona_map,
+            priority_score=prospect.priority_score or 0.0
         )
-        prospect.messages = json.dumps(outreach_data)
+        
+        if "error" in exec_data:
+            raise HTTPException(status_code=500, detail=exec_data["error"])
+
+        # Update Messages
+        prospect.messages = json.dumps({"outreach_payload": exec_data.get("outreach_payload", [])})
         prospect.outreach_status = "DRAFTED"
         
-        # Compliance is now built into the prompt itself, automatically mark as approved
-        prospect.compliance_status = json.dumps({
+        # Update Compliance
+        prospect.compliance_status = json.dumps(exec_data.get("compliance", {
             "overall_status": "APPROVED",
             "safe_to_send": True,
             "issues": [],
-            "compliance_summary": "Auto-verified via strict compliant prompt design."
-        })
+            "compliance_summary": "Auto-verified."
+        }))
 
-        # The whole pipeline is complete. Automatically generate Sales Action Recommendation.
-        from services.ai_service import generate_next_action
-        action_result = generate_next_action(
-            company_name=prospect.company_name,
-            priority_score=prospect.priority_score or 0.0,
-            fit_score=prospect.fit_score or 0.0,
-            intent_score=prospect.intent_score or 0.0,
-            signals_json=prospect.signals or "{}",
-            compliance_status="APPROVED"
-        )
-        prospect.next_action = json.dumps({
-            "action":           action_result.action,
-            "reason":           action_result.reason,
-            "suggested_owner":  action_result.suggested_owner,
-            "suggested_timing": action_result.suggested_timing,
-            "priority_label":   action_result.priority_label
-        })
+        # Update Next Action
+        prospect.next_action = json.dumps(exec_data.get("next_action", {}))
+        
+        # Update Sequence Plan
+        prospect.sequence_plan = json.dumps({"sequence_payload": exec_data.get("sequence_payload", [])})
 
         db.commit()
         db.refresh(prospect)

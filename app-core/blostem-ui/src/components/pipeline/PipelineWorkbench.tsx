@@ -210,25 +210,13 @@ export default function PipelineWorkbench() {
 
     const steps = [
       {
-        label: "Extracting Signals",
+        label: "Market Intelligence",
         url: "generate-signals",
         body: { manual_context: "" },
-        skip: !!selectedProspect.signals,
+        skip: !!selectedProspect.signals && !!selectedProspect.persona_map,
       },
       {
-        label: "Calculating Score",
-        url: "score",
-        body: null,
-        skip: selectedProspect.priority_score != null,
-      },
-      {
-        label: "Mapping Personas",
-        url: "map-personas",
-        body: null,
-        skip: !!selectedProspect.persona_map,
-      },
-      {
-        label: "Generating Outreach",
+        label: "Sequence Generation",
         url: "generate-outreach",
         body: null,
         skip: !!selectedProspect.messages,
