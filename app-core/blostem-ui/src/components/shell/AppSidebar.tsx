@@ -123,7 +123,8 @@ export function AppSidebar({
       <motion.nav
         className={cn(
           "glass-nav fixed inset-y-3 left-3 z-50 flex w-[18.75rem] flex-col overflow-hidden rounded-[28px] p-4 transition-transform duration-300 lg:inset-y-4 lg:left-4",
-          isOpen ? "translate-x-0" : "-translate-x-[calc(100%+1rem)] lg:translate-x-0"
+          isOpen ? "translate-x-0" : "-translate-x-[calc(100%+1rem)] lg:translate-x-0",
+          pathname?.includes("/pipeline") && "inset-y-0 left-0 rounded-none border-r border-white/5 bg-slate-950 lg:inset-y-0 lg:left-0"
         )}
         initial={reduceMotion ? undefined : { opacity: 0, x: -28, scale: 0.98 }}
         animate={

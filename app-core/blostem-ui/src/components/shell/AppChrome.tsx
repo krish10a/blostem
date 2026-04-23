@@ -30,14 +30,14 @@ export function AppChrome({ children }: { children: ReactNode }) {
         <AppSidebar isOpen={sidebarOpen} onClose={() => setSidebarOpen(false)} />
       </Suspense>
 
-      <div className="relative min-h-screen lg:pl-[20.25rem]">
-        <div className={cn("px-3 pt-3 sm:px-4 sm:pt-4 lg:px-6 lg:pt-5", isPipeline && "lg:px-0 lg:pt-0")}>
+      <div className={cn("relative min-h-screen lg:pl-[20.25rem]", isPipeline && "lg:pl-[18.75rem]")}>
+        <div className={cn("px-3 pt-3 sm:px-4 sm:pt-4 lg:px-6 lg:pt-5", isPipeline && "p-0")}>
           <AppTopBar onMenuToggle={() => setSidebarOpen((open) => !open)} />
         </div>
 
         <main className={cn(
           "px-3 pb-8 pt-4 sm:px-4 sm:pb-10 lg:px-6 lg:pt-6 xl:px-8",
-          isPipeline && "px-0 pb-0 pt-0 sm:px-0 sm:pb-0 lg:px-0 lg:pt-0 xl:px-0"
+          isPipeline && "p-0"
         )}>
           <div className={cn("mx-auto max-w-[1560px]", isPipeline && "max-w-none")}>{children}</div>
         </main>

@@ -356,15 +356,15 @@ export default function PipelineWorkbench() {
             <AnalyticsDashboard />
           </div>
         ) : (
-          <div className="animate-fade-up">
+          <div className="flex w-full overflow-hidden border-t border-white/5 bg-slate-950">
             {isRefreshing && prospects.length === 0 ? (
-              <div className="mx-auto max-w-[1600px] px-6 lg:px-12">
+              <div className="mx-auto w-full px-6 py-12 lg:px-12">
                 <DashboardSkeleton />
               </div>
             ) : (
-              <div className="flex w-full h-[calc(100vh-5rem)] overflow-hidden bg-[#0b1326]/40 backdrop-blur-3xl">
+              <div className="flex w-full h-[calc(100vh-100px)] overflow-hidden">
                 {/* Left Column: Stationary sidebar (Grounded) */}
-                <div className="w-[400px] flex-shrink-0 flex flex-col border-r border-white/5 bg-black/20">
+                <div className="w-[420px] flex-shrink-0 flex flex-col border-r border-white/5 bg-black/20">
                   <PipelineIntakePanel
                     prospects={prospects}
                     selectedProspectId={selectedProspect?.id}
@@ -379,114 +379,53 @@ export default function PipelineWorkbench() {
                   />
                 </div>
 
-                {/* Right Column: Processing Surface */}
-                <div className="flex-1 min-w-0 overflow-y-auto p-8 lg:p-12 thin-scrollbar">
-                  {!selectedProspect ? (
-                    <MotionCard 
-                      className="glass-panel flex h-[600px] flex-col items-center justify-center rounded-[40px] border border-dashed border-white/10" 
-                      hover={false}
-                    >
-                      <div className="mb-8 rounded-full bg-white/5 p-10">
-                        <Sparkles className="h-16 w-16 text-slate-700" />
-                      </div>
-                      <h3 className="font-headline text-2xl font-black tracking-tight text-white">System Standby</h3>
-                      <p className="mt-3 max-w-md text-center text-base font-medium text-slate-500">
-                        Select a high-intent account from the queue to initialize the AI 
-                        orchestration stream and multi-channel sequence engine.
-                      </p>
-                    </MotionCard>
-                  ) : (
-                    <MotionGroup className="flex flex-col gap-10">
-                      {/* Detailed Header */}
-                      <MotionCard className="mouse-glow glass-panel relative overflow-hidden rounded-[40px] p-8 sm:p-12" delay={0.1} hover={false}>
-                        <div className="absolute top-0 right-0 h-96 w-96 translate-x-1/3 -translate-y-1/3 rounded-full bg-primary/10 blur-[120px]" />
-                        
-                        <div className="flex flex-wrap items-start justify-between gap-10">
+                {/* Right Column: Processing Surface (Grounded) */}
+                <div className="flex-1 flex flex-col overflow-hidden bg-slate-900/10">
+                  {selectedProspect ? (
+                    <div className="flex h-full flex-col overflow-hidden">
+                      {/* Fixed Sub-Header */}
+                      <div className="border-b border-white/5 bg-white/[0.02] p-8">
+                        <div className="flex flex-wrap items-start justify-between gap-6">
                           <div className="min-w-0 flex-1">
-                            <div className="mb-4 flex items-center gap-3">
-                              <span className="flex items-center gap-2 rounded-xl bg-primary/10 px-3 py-1 text-[10px] font-black uppercase tracking-widest text-primary border border-primary/20">
-                                <span className="h-1.5 w-1.5 animate-pulse rounded-full bg-primary" />
-                                Active Sequence
+                            <div className="mb-2 flex items-center gap-3">
+                              <span className="flex items-center gap-2 rounded-lg bg-primary/10 px-2 py-1 text-[9px] font-black uppercase tracking-widest text-primary border border-primary/20">
+                                <span className="h-1 w-1 animate-pulse rounded-full bg-primary" />
+                                Live Context
                               </span>
-                              {selectedProspect.website && (
-                                <a 
-                                  href={`https://${selectedProspect.website}`} 
-                                  target="_blank" 
-                                  rel="noreferrer"
-                                  className="text-xs font-bold text-slate-500 hover:text-primary transition-colors"
-                                >
-                                  {selectedProspect.website}
-                                </a>
-                              )}
+                              <span className="text-[10px] font-bold text-slate-500">{selectedProspect.website || "No URL"}</span>
                             </div>
-                            <h2 className="font-headline text-5xl font-black tracking-tighter text-white sm:text-6xl">
+                            <h2 className="font-headline text-4xl font-black tracking-tight text-white">
                               {selectedProspect.company_name}
                             </h2>
-                            <div className="mt-6 flex flex-wrap items-center gap-6">
-                              <div className="flex items-center gap-3 text-sm font-bold text-slate-400">
-                                {selectedProspect.industry || "General Vertical"}
-                              </div>
-                              <div className="h-1 w-1 rounded-full bg-slate-800" />
-                              <div className="flex items-center gap-3 text-sm font-bold text-slate-400">
-                                <Users2 className="h-4 w-4 text-primary" />
-                                {selectedProspect.size || "10-50 employees"}
-                              </div>
-                            </div>
                           </div>
-
-                          <div className="flex flex-col items-end gap-6">
-                            <div className="flex items-center gap-4">
-                              <div className="flex flex-col items-end">
-                                <span className="text-[10px] font-black uppercase tracking-[0.2em] text-slate-500">Priority</span>
-                                <span className="font-mono text-4xl font-black text-white">{(selectedProspect.priority_score ?? 0).toFixed(0)}</span>
-                              </div>
-                              <div className="flex flex-col items-end">
-                                <span className="text-[10px] font-black uppercase tracking-[0.2em] text-slate-500">Status</span>
-                                <span className="rounded-full bg-secondary/10 px-3 py-1 text-[10px] font-black uppercase tracking-widest text-secondary border border-secondary/20">Verified</span>
-                              </div>
-                            </div>
-                            
-                            <button 
+                          <div className="flex items-center gap-4">
+                             <button 
                               onClick={handleRunFullPipeline}
                               disabled={pipelineRunning}
-                              className="group flex items-center gap-3 rounded-2xl bg-white px-8 py-4 text-sm font-black uppercase tracking-widest text-black transition-all hover:bg-primary hover:text-white disabled:opacity-50 shadow-xl shadow-white/5"
+                              className="group flex items-center gap-3 rounded-xl bg-primary px-6 py-3 text-xs font-black uppercase tracking-widest text-white transition-all hover:bg-primary/80 disabled:opacity-50 shadow-lg shadow-primary/20"
                             >
-                              {pipelineRunning ? (
-                                <RefreshCw className="h-4 w-4 animate-spin" />
-                              ) : (
-                                <Play className="h-4 w-4 fill-current" />
-                              )}
-                              {pipelineRunning ? `Running ${pipelineStep}...` : "Execute Full Pipeline"}
+                              {pipelineRunning ? <RefreshCw className="h-4 w-4 animate-spin" /> : <Zap className="h-4 w-4" />}
+                              {pipelineRunning ? "Processing..." : "Run Engine"}
                             </button>
                           </div>
                         </div>
-                      </MotionCard>
+                      </div>
 
-                        {pipelineRunning && (
-                          <div className="mt-12">
-                            <div className="mb-4 flex items-center justify-between">
-                              <div className="flex items-center gap-3">
-                                <span className="h-2.5 w-2.5 animate-ping rounded-full bg-primary" />
-                                <span className="text-[11px] font-black uppercase tracking-[0.3em] text-white">
-                                  {pipelineStep ?? "Syncing Context..."}
+                      {/* Scrollable Flow */}
+                      <div className="flex-1 overflow-y-auto p-8 thin-scrollbar space-y-10">
+                         {pipelineRunning && (
+                            <div className="rounded-2xl border border-primary/20 bg-primary/5 p-6">
+                              <div className="mb-4 flex items-center justify-between">
+                                <span className="text-[10px] font-black uppercase tracking-[0.3em] text-primary">
+                                  {pipelineStep || "Initializing AI Core..."}
                                 </span>
+                                <span className="font-mono text-[10px] font-bold text-primary/40">STEP {pipelineStep ? "2/3" : "1/3"}</span>
                               </div>
-                              <span className="font-mono text-[10px] font-bold text-primary opacity-60">AI CORE ACTIVE</span>
+                              <div className="h-2 w-full overflow-hidden rounded-full bg-white/5">
+                                <div className="animate-shimmer h-full w-[45%] rounded-full bg-primary" />
+                              </div>
                             </div>
-                            <div className="h-3 w-full overflow-hidden rounded-full bg-white/5 border border-white/5">
-                              <div className="animate-shimmer h-full w-[65%] rounded-full bg-gradient-to-r from-primary via-secondary to-primary shadow-[0_0_30px_rgba(17,101,231,0.6)]" />
-                            </div>
-                          </div>
-                        )}
-                      </MotionCard>
-
-                      <div className="flex flex-col gap-10">
-                        {selectedProspect.next_action && (
-                          <SalesActionPanel
-                            key={`action-${selectedProspect.id}`}
-                            prospect={selectedProspect}
-                          />
-                        )}
+                          )}
 
                         <SignalIntelligencePanel
                           prospect={selectedProspect}
@@ -503,7 +442,7 @@ export default function PipelineWorkbench() {
                             key={`persona-${selectedProspect.id}`}
                             onPersonasGenerated={() => {
                               void fetchProspects(false);
-                              toast.success("Personas mapped to intelligence.");
+                              toast.success("Personas mapped.");
                             }}
                           />
                         )}
@@ -524,15 +463,21 @@ export default function PipelineWorkbench() {
                         )}
 
                         {selectedProspect.sequence_plan && (
-                          <MotionSection className="mt-8 border-t border-white/8 pt-12" delay={0.12}>
-                            <SequenceTimeline
-                              planJson={selectedProspect.sequence_plan}
-                              companyName={selectedProspect.company_name}
-                            />
-                          </MotionSection>
+                          <SequenceTimeline
+                            planJson={selectedProspect.sequence_plan}
+                            companyName={selectedProspect.company_name}
+                          />
                         )}
                       </div>
-                    </MotionGroup>
+                    </div>
+                  ) : (
+                    <div className="flex h-full items-center justify-center">
+                      <div className="text-center opacity-40">
+                        <Building2 className="mx-auto mb-6 h-16 w-16 text-slate-700" />
+                        <h3 className="font-headline text-2xl font-bold text-white">Select Account</h3>
+                        <p className="mt-2 text-sm text-slate-500">Queue is idle. Pick a prospect to begin enrichment.</p>
+                      </div>
+                    </div>
                   )}
                 </div>
               </div>

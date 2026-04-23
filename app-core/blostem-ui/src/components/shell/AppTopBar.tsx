@@ -47,7 +47,10 @@ export function AppTopBar({ onMenuToggle }: { onMenuToggle: () => void }) {
 
   return (
     <motion.header
-      className="glass-nav sticky top-3 z-30 rounded-[28px] px-4 py-4 sm:px-5 lg:top-4 lg:px-6"
+      className={cn(
+        "glass-nav sticky top-3 z-30 rounded-[28px] px-4 py-4 sm:px-5 lg:top-4 lg:px-6",
+        pathname?.includes("/pipeline") && "top-0 rounded-none border-b border-white/5 bg-slate-950/80 backdrop-blur-md lg:top-0"
+      )}
       initial={reduceMotion ? undefined : { opacity: 0, y: -18 }}
       animate={reduceMotion ? undefined : { opacity: 1, y: 0 }}
       transition={reduceMotion ? undefined : { duration: 0.5, ease: [0.16, 1, 0.3, 1] }}
