@@ -1,4 +1,13 @@
 import { MotionCard, MotionGroup } from "@/components/motion/BlostemMotion";
+import { 
+  Zap, 
+  TrendingUp, 
+  UsersRound, 
+  AlertCircle, 
+  Clock, 
+  ArrowRightCircle 
+} from "lucide-react";
+import { cn } from "@/lib/utils";
 
 interface NextAction {
   action: string;
