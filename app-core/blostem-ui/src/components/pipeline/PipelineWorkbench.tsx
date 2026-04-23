@@ -288,8 +288,8 @@ export default function PipelineWorkbench() {
       </div>
 
       <div className="relative z-10 px-4 py-8 sm:px-6 lg:px-8">
-        <div className="mb-10 flex flex-col gap-6 xl:flex-row xl:items-center xl:justify-between">
-          <MotionCard className="glass-panel relative flex-1 overflow-hidden rounded-[32px] p-8 sm:p-10" hover={false}>
+        <div className="mb-6 flex flex-col gap-6 xl:flex-row xl:items-center xl:justify-between">
+          <MotionCard className="glass-panel relative flex-1 overflow-hidden rounded-[24px] p-6 sm:p-8" hover={false}>
             <div className="absolute top-0 right-0 p-8 opacity-10">
               <Zap className="h-40 w-40 text-primary" />
             </div>
@@ -361,13 +361,13 @@ export default function PipelineWorkbench() {
             {isRefreshing && prospects.length === 0 ? (
               <DashboardSkeleton />
             ) : (
-              <div className="grid w-full gap-10 xl:grid-cols-[400px_1fr]">
+              <div className="grid w-full gap-10 lg:grid-cols-[380px_1fr]">
                 {/* Left Column: Intake & Queue */}
-                <div className="flex flex-col gap-8 xl:sticky xl:top-8 xl:h-[calc(100vh-10rem)] xl:self-start">
-                  <MotionCard className="glass-panel flex flex-1 flex-col overflow-hidden rounded-[32px]" hover={false}>
-                    <div className="space-y-8 p-8 pb-0">
+                <div className="flex flex-col gap-6 lg:sticky lg:top-8 lg:h-[calc(100vh-12rem)] lg:self-start">
+                  <MotionCard className="glass-panel flex flex-col overflow-hidden rounded-[32px] lg:h-full" hover={false}>
+                    <div className="space-y-6 p-6 pb-0">
                       <div>
-                        <h3 className="mb-5 flex items-center gap-2 font-headline text-[10px] font-black uppercase tracking-[0.3em] text-primary">
+                        <h3 className="mb-3 flex items-center gap-2 font-headline text-[10px] font-black uppercase tracking-[0.3em] text-primary">
                           <Plus className="h-3.5 w-3.5" />
                           Intake Protocol
                         </h3>
@@ -379,8 +379,8 @@ export default function PipelineWorkbench() {
                         />
                       </div>
 
-                      <div className="border-t border-white/8 pt-8">
-                        <h3 className="mb-5 flex items-center gap-2 font-headline text-[10px] font-black uppercase tracking-[0.3em] text-secondary">
+                      <div className="border-t border-white/8 pt-6">
+                        <h3 className="mb-3 flex items-center gap-2 font-headline text-[10px] font-black uppercase tracking-[0.3em] text-secondary">
                           <Table className="h-3.5 w-3.5" />
                           Mass Ingestion
                         </h3>
@@ -400,7 +400,7 @@ export default function PipelineWorkbench() {
                           });
                           void fetchProspects();
                         }}
-                        className="glass-button haptic-hover group mb-8 flex w-full items-center justify-center gap-3 rounded-2xl border border-dashed border-white/20 py-4 text-xs font-black uppercase tracking-widest text-slate-500 transition-all hover:border-primary/50 hover:text-primary"
+                        className="glass-button haptic-hover group mb-6 flex w-full items-center justify-center gap-3 rounded-2xl border border-dashed border-white/20 py-3 text-xs font-black uppercase tracking-widest text-slate-500 transition-all hover:border-primary/50 hover:text-primary"
                       >
                         <Sparkles className="h-4 w-4 transition-transform group-hover:scale-110" />
                         Initialize Demo Seed
