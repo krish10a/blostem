@@ -8,13 +8,17 @@ import { AppTopBar } from "@/components/shell/AppTopBar";
 import { cn } from "@/lib/utils";
 
 export function AppChrome({ children }: { children: ReactNode }) {
-  const pathname = usePathname();
   const [sidebarOpen, setSidebarOpen] = useState(false);
+  const pathname = usePathname();
   const reduceMotion = useReducedMotion();
 
   useEffect(() => {
     const timeout = window.setTimeout(() => setSidebarOpen(false), 0);
     return () => window.clearTimeout(timeout);
+  }, [pathname]);
+
+  useEffect(() => {
+    window.scrollTo(0, 0);
   }, [pathname]);
 
   const isPipeline = pathname?.includes("/pipeline");

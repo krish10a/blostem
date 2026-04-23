@@ -12,8 +12,6 @@ import { User } from "@supabase/supabase-js";
 import { useRouter, useSearchParams } from "next/navigation";
 import { fetchWithAuth } from "@/lib/api";
 
-const API_BASE_URL = process.env.NEXT_PUBLIC_API_URL || "http://localhost:8000";
-
 interface Prospect {
   id: number;
   company_name: string;
@@ -59,6 +57,7 @@ export function AppSidebar({
     if (!isPipeline) return;
     try {
       setIsRefreshing(true);
+      const API_BASE_URL = process.env.NEXT_PUBLIC_BACKEND_URL || "http://localhost:8000";
       const res = await fetchWithAuth(`${API_BASE_URL}/prospects/`);
       if (res.ok) {
         const data = await res.json();

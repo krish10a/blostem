@@ -11,7 +11,9 @@ import {
   Search,
   Trash2,
   ChevronRight,
-  Target
+  Target,
+  RefreshCw,
+  Zap
 } from "lucide-react";
 import { toast } from "sonner";
 import ProspectIntakeForm from "./ProspectIntakeForm";
@@ -29,6 +31,7 @@ type Prospect = {
   priority_score?: number | null;
   compliance_status?: string;
   persona_map?: string;
+  status?: string;
 };
 
 interface PipelineIntakePanelProps {

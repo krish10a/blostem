@@ -4,6 +4,7 @@ import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { motion, useReducedMotion } from "motion/react";
 import { MaterialIcon } from "./MaterialIcon";
+import { cn } from "@/lib/utils";
 
 const TITLES: Record<
   string,
