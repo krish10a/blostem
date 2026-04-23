@@ -135,6 +135,7 @@ export default function PipelineWorkbench() {
         let data: Prospect[] = await res.json();
         data = data.map(normalizeProspect);
         data = data.sort((a, b) => (b.priority_score || 0) - (a.priority_score || 0));
+        console.log("Prospects fetched:", data.length);
         setProspects(data);
         // Notify other components (like sidebar) that prospects were updated
         window.dispatchEvent(new CustomEvent('prospects-updated'));
@@ -143,7 +144,8 @@ export default function PipelineWorkbench() {
           if (updated) setSelectedProspect(updated);
         }
       }
-    } catch {
+    } catch (err) {
+      console.error("Fetch error:", err);
       toast.error("Failed to reach backend. Is the server running?");
     } finally {
       setIsRefreshing(false);
@@ -362,8 +364,8 @@ export default function PipelineWorkbench() {
               <div className="grid w-full gap-10 xl:grid-cols-[400px_1fr]">
                 {/* Left Column: Intake & Queue */}
                 <div className="flex flex-col gap-8 xl:sticky xl:top-8 xl:h-[calc(100vh-10rem)] xl:self-start">
-                  <MotionCard className="glass-panel flex flex-col gap-8 rounded-[32px] p-8" hover={false}>
-                    <div className="space-y-8">
+                  <MotionCard className="glass-panel flex flex-1 flex-col overflow-hidden rounded-[32px]" hover={false}>
+                    <div className="space-y-8 p-8 pb-0">
                       <div>
                         <h3 className="mb-5 flex items-center gap-2 font-headline text-[10px] font-black uppercase tracking-[0.3em] text-primary">
                           <Plus className="h-3.5 w-3.5" />
@@ -398,181 +400,181 @@ export default function PipelineWorkbench() {
                           });
                           void fetchProspects();
                         }}
-                        className="glass-button haptic-hover group flex w-full items-center justify-center gap-3 rounded-2xl border border-dashed border-white/20 py-4 text-xs font-black uppercase tracking-widest text-slate-500 transition-all hover:border-primary/50 hover:text-primary"
+                        className="glass-button haptic-hover group mb-8 flex w-full items-center justify-center gap-3 rounded-2xl border border-dashed border-white/20 py-4 text-xs font-black uppercase tracking-widest text-slate-500 transition-all hover:border-primary/50 hover:text-primary"
                       >
                         <Sparkles className="h-4 w-4 transition-transform group-hover:scale-110" />
                         Initialize Demo Seed
                       </button>
                     </div>
-                  </MotionCard>
 
-                  <MotionCard className="glass-panel flex flex-1 flex-col overflow-hidden rounded-[32px]" delay={0.06} hover={false}>
-                    <div className="sticky top-0 z-20 flex flex-wrap items-center justify-between gap-4 border-b border-white/8 bg-[#0b1326]/60 p-6 backdrop-blur-2xl">
-                      <div className="flex items-center gap-3">
-                        <h3 className="font-headline text-[10px] font-black uppercase tracking-[0.3em] text-white">Execution Queue</h3>
-                        <span className="flex h-5 items-center justify-center rounded-full bg-primary/20 px-2.5 text-[9px] font-black text-primary shadow-[0_0_20px_rgba(177,197,255,0.2)]">
-                          {prospects.length}
-                        </span>
-                      </div>
-
-                      <div className="flex items-center gap-1 rounded-xl border border-white/8 bg-white/4 p-0.5">
-                        <button
-                          onClick={() => setProspectListMode("cards")}
-                          className={cn(
-                            "rounded-lg px-3 py-1.5 text-[9px] font-black uppercase tracking-[0.15em] transition-all",
-                            prospectListMode === "cards" ? "bg-primary text-white shadow-lg" : "text-slate-500 hover:text-slate-300"
-                          )}
-                        >
-                          Grid
-                        </button>
-                        <button
-                          onClick={() => setProspectListMode("table")}
-                          className={cn(
-                            "inline-flex items-center gap-1 rounded-lg px-3 py-1.5 text-[9px] font-black uppercase tracking-[0.15em] transition-all",
-                            prospectListMode === "table" ? "bg-primary text-white shadow-lg" : "text-slate-500 hover:text-slate-300"
-                          )}
-                        >
-                          <Table className="h-3 w-3" />
-                          List
-                        </button>
-                      </div>
-                    </div>
-
-                    {selectedIds.size > 0 && (
-                      <div className="flex items-center justify-between bg-primary/10 p-4 backdrop-blur-md">
-                        <span className="text-[10px] font-black uppercase tracking-widest text-primary">
-                          {selectedIds.size} Marked
-                        </span>
-                        <button
-                          onClick={handleBatchDelete}
-                          className="haptic-hover flex items-center gap-2 rounded-full bg-white px-4 py-1.5 text-[9px] font-black uppercase tracking-widest text-primary transition-all hover:bg-red-500 hover:text-white"
-                        >
-                          <Trash2 className="h-3.5 w-3.5" />
-                          Purge
-                        </button>
-                      </div>
-                    )}
-
-                    <div className="thin-scrollbar flex-1 space-y-3 overflow-y-auto p-5" ref={sidebarRef}>
-                      {prospects.length === 0 ? (
-                        <div className="flex h-full min-h-[300px] flex-col items-center justify-center text-center">
-                          <div className="mb-6 flex h-16 w-16 items-center justify-center rounded-full bg-white/5">
-                            <Search className="h-8 w-8 text-slate-700" />
-                          </div>
-                          <p className="text-[10px] font-black uppercase tracking-[0.3em] text-slate-600">
-                            Queue Empty
-                          </p>
+                    <div className="flex flex-1 flex-col overflow-hidden border-t border-white/8">
+                      <div className="sticky top-0 z-20 flex flex-wrap items-center justify-between gap-4 bg-[#0b1326]/60 p-6 backdrop-blur-2xl">
+                        <div className="flex items-center gap-3">
+                          <h3 className="font-headline text-[10px] font-black uppercase tracking-[0.3em] text-white">Execution Queue</h3>
+                          <span className="flex h-5 items-center justify-center rounded-full bg-primary/20 px-2.5 text-[9px] font-black text-primary shadow-[0_0_20px_rgba(177,197,255,0.2)]">
+                            {prospects.length}
+                          </span>
                         </div>
-                      ) : prospectListMode === "table" ? (
-                        <div className="space-y-1">
-                          {prospects.map((p) => {
-                            const isSelected = selectedProspect?.id === p.id;
-                            return (
-                              <div
-                                key={p.id}
-                                onClick={() => selectProspect(p)}
-                                className={cn(
-                                  "group flex cursor-pointer items-center justify-between rounded-xl border px-4 py-3.5 transition-all",
-                                  isSelected
-                                    ? "border-primary/30 bg-primary/10"
-                                    : "border-transparent hover:bg-white/5"
-                                )}
-                              >
-                                <div className="min-w-0 flex-1">
-                                  <div className="truncate font-headline text-sm font-black tracking-tight text-white">
-                                    {p.company_name}
-                                  </div>
-                                  <div className="mt-1 flex items-center gap-2 text-[10px] font-bold text-slate-500">
-                                    {p.industry || "General"}
-                                  </div>
-                                </div>
-                                <div className="flex items-center gap-4">
-                                  <span className={cn(
-                                    "font-mono text-xs font-black",
-                                    (p.priority_score || 0) >= 80 ? "text-secondary" : "text-slate-500"
-                                  )}>
-                                    {(p.priority_score || 0).toFixed(0)}
-                                  </span>
-                                  <ChevronRight className={cn("h-4 w-4 transition-transform", isSelected ? "rotate-90 text-primary" : "text-slate-700")} />
-                                </div>
-                              </div>
-                            );
-                          })}
+
+                        <div className="flex items-center gap-1 rounded-xl border border-white/8 bg-white/4 p-0.5">
+                          <button
+                            onClick={() => setProspectListMode("cards")}
+                            className={cn(
+                              "rounded-lg px-3 py-1.5 text-[9px] font-black uppercase tracking-[0.15em] transition-all",
+                              prospectListMode === "cards" ? "bg-primary text-white shadow-lg" : "text-slate-500 hover:text-slate-300"
+                            )}
+                          >
+                            Grid
+                          </button>
+                          <button
+                            onClick={() => setProspectListMode("table")}
+                            className={cn(
+                              "inline-flex items-center gap-1 rounded-lg px-3 py-1.5 text-[9px] font-black uppercase tracking-[0.15em] transition-all",
+                              prospectListMode === "table" ? "bg-primary text-white shadow-lg" : "text-slate-500 hover:text-slate-300"
+                            )}
+                          >
+                            <Table className="h-3 w-3" />
+                            List
+                          </button>
                         </div>
-                      ) : (
-                        <div className="space-y-4">
-                          {prospects.map((p, index) => {
-                            const status = parseComplianceStatus(p.compliance_status);
-                            const isSelected = selectedProspect?.id === p.id;
-                            const isChecked = selectedIds.has(p.id);
-                            return (
-                                <MotionCard
-                                  key={p.id}
-                                  className={cn(
-                                    "group relative cursor-pointer overflow-hidden rounded-[24px] border transition-all duration-500",
-                                    isSelected
-                                      ? "ambient-shadow border-primary/40 bg-primary/10 ring-1 ring-primary/20"
-                                      : "border-white/5 bg-white/[0.02] hover:border-white/15 hover:bg-white/5"
-                                  )}
-                                  delay={Math.min(index * 0.035, 0.21)}
-                                >
-                                  <div className="p-5" onClick={() => selectProspect(p)}>
-                                    <div className="flex items-start justify-between gap-4">
-                                      <div className="min-w-0 flex-1">
-                                        <div className="truncate font-headline text-lg font-black tracking-tighter text-white">
-                                          {p.company_name}
-                                        </div>
-                                        <div className="mt-1.5 flex items-center gap-2 truncate text-[9px] font-black uppercase tracking-widest text-slate-500">
-                                          <Target className="h-3 w-3 text-primary/60" />
-                                          {parsePrimaryPersona(p.persona_map) ?? "Awaiting Profiling"}
-                                        </div>
-                                      </div>
+                      </div>
 
-                                      <div className="flex flex-col items-end gap-2">
-                                        <div className="flex items-center gap-1.5 rounded-xl border border-white/10 bg-[#0b1326]/60 px-3 py-1.5 backdrop-blur-md">
-                                          <div className="h-1.5 w-1.5 animate-pulse rounded-full bg-primary shadow-[0_0_8px_#b1c5ff]" />
-                                          <span className="font-mono text-xs font-black text-white">
-                                            {(p.priority_score ?? 0).toFixed(0)}
-                                          </span>
-                                        </div>
-                                      </div>
-                                    </div>
-
-                                    <div className="mt-5 flex items-center justify-between border-t border-white/6 pt-4">
-                                      <div className="flex items-center gap-3">
-                                        <input
-                                          type="checkbox"
-                                          checked={isChecked}
-                                          onChange={(e) => toggleSelect(p.id, e)}
-                                          className="h-4 w-4 rounded border-white/10 bg-white/5 text-primary focus:ring-0 focus:ring-offset-0"
-                                        />
-                                        <span
-                                          className={cn(
-                                            "rounded-full border px-2.5 py-0.5 text-[8px] font-black uppercase tracking-widest",
-                                            getStatusColor(status)
-                                          )}
-                                        >
-                                          {status ?? "Queueing"}
-                                        </span>
-                                      </div>
-                                      
-                                      <button
-                                        onClick={(e) => handleDelete(p.id, e)}
-                                        disabled={deletingId === p.id}
-                                        className="rounded-xl p-2 text-slate-600 transition-all hover:bg-red-500/10 hover:text-red-500 disabled:opacity-50"
-                                      >
-                                        <Trash2 className="h-4 w-4" />
-                                      </button>
-                                    </div>
-                                  </div>
-                                  {isSelected && (
-                                    <div className="absolute inset-y-0 left-0 w-1.5 bg-primary shadow-[4px_0_15px_rgba(177,197,255,0.4)]" />
-                                  )}
-                                </MotionCard>
-                            );
-                          })}
+                      {selectedIds.size > 0 && (
+                        <div className="flex items-center justify-between bg-primary/10 p-4 backdrop-blur-md">
+                          <span className="text-[10px] font-black uppercase tracking-widest text-primary">
+                            {selectedIds.size} Marked
+                          </span>
+                          <button
+                            onClick={handleBatchDelete}
+                            className="haptic-hover flex items-center gap-2 rounded-full bg-white px-4 py-1.5 text-[9px] font-black uppercase tracking-widest text-primary transition-all hover:bg-red-500 hover:text-white"
+                          >
+                            <Trash2 className="h-3.5 w-3.5" />
+                            Purge
+                          </button>
                         </div>
                       )}
+
+                      <div className="thin-scrollbar flex-1 space-y-3 overflow-y-auto p-5" ref={sidebarRef}>
+                        {prospects.length === 0 ? (
+                          <div className="flex h-full min-h-[300px] flex-col items-center justify-center text-center">
+                            <div className="mb-6 flex h-16 w-16 items-center justify-center rounded-full bg-white/5">
+                              <Search className="h-8 w-8 text-slate-700" />
+                            </div>
+                            <p className="text-[10px] font-black uppercase tracking-[0.3em] text-slate-600">
+                              Queue Empty
+                            </p>
+                          </div>
+                        ) : prospectListMode === "table" ? (
+                          <div className="space-y-1">
+                            {prospects.map((p) => {
+                              const isSelected = selectedProspect?.id === p.id;
+                              return (
+                                <div
+                                  key={p.id}
+                                  onClick={() => selectProspect(p)}
+                                  className={cn(
+                                    "group flex cursor-pointer items-center justify-between rounded-xl border px-4 py-3.5 transition-all",
+                                    isSelected
+                                      ? "border-primary/30 bg-primary/10"
+                                      : "border-transparent hover:bg-white/5"
+                                  )}
+                                >
+                                  <div className="min-w-0 flex-1">
+                                    <div className="truncate font-headline text-sm font-black tracking-tight text-white">
+                                      {p.company_name}
+                                    </div>
+                                    <div className="mt-1 flex items-center gap-2 text-[10px] font-bold text-slate-500">
+                                      {p.industry || "General"}
+                                    </div>
+                                  </div>
+                                  <div className="flex items-center gap-4">
+                                    <span className={cn(
+                                      "font-mono text-xs font-black",
+                                      (p.priority_score || 0) >= 80 ? "text-secondary" : "text-slate-500"
+                                    )}>
+                                      {(p.priority_score || 0).toFixed(0)}
+                                    </span>
+                                    <ChevronRight className={cn("h-4 w-4 transition-transform", isSelected ? "rotate-90 text-primary" : "text-slate-700")} />
+                                  </div>
+                                </div>
+                              );
+                            })}
+                          </div>
+                        ) : (
+                          <div className="space-y-4">
+                            {prospects.map((p, index) => {
+                              const status = parseComplianceStatus(p.compliance_status);
+                              const isSelected = selectedProspect?.id === p.id;
+                              const isChecked = selectedIds.has(p.id);
+                              return (
+                                  <MotionCard
+                                    key={p.id}
+                                    className={cn(
+                                      "group relative cursor-pointer overflow-hidden rounded-[24px] border transition-all duration-500",
+                                      isSelected
+                                        ? "ambient-shadow border-primary/40 bg-primary/10 ring-1 ring-primary/20"
+                                        : "border-white/5 bg-white/[0.02] hover:border-white/15 hover:bg-white/5"
+                                    )}
+                                    delay={Math.min(index * 0.035, 0.21)}
+                                  >
+                                    <div className="p-5" onClick={() => selectProspect(p)}>
+                                      <div className="flex items-start justify-between gap-4">
+                                        <div className="min-w-0 flex-1">
+                                          <div className="truncate font-headline text-lg font-black tracking-tighter text-white">
+                                            {p.company_name}
+                                          </div>
+                                          <div className="mt-1.5 flex items-center gap-2 truncate text-[9px] font-black uppercase tracking-widest text-slate-500">
+                                            <Target className="h-3 w-3 text-primary/60" />
+                                            {parsePrimaryPersona(p.persona_map) ?? "Awaiting Profiling"}
+                                          </div>
+                                        </div>
+
+                                        <div className="flex flex-col items-end gap-2">
+                                          <div className="flex items-center gap-1.5 rounded-xl border border-white/10 bg-[#0b1326]/60 px-3 py-1.5 backdrop-blur-md">
+                                            <div className="h-1.5 w-1.5 animate-pulse rounded-full bg-primary shadow-[0_0_8px_#b1c5ff]" />
+                                            <span className="font-mono text-xs font-black text-white">
+                                              {(p.priority_score ?? 0).toFixed(0)}
+                                            </span>
+                                          </div>
+                                        </div>
+                                      </div>
+
+                                      <div className="mt-5 flex items-center justify-between border-t border-white/6 pt-4">
+                                        <div className="flex items-center gap-3">
+                                          <input
+                                            type="checkbox"
+                                            checked={isChecked}
+                                            onChange={(e) => toggleSelect(p.id, e)}
+                                            className="h-4 w-4 rounded border-white/10 bg-white/5 text-primary focus:ring-0 focus:ring-offset-0"
+                                          />
+                                          <span
+                                            className={cn(
+                                              "rounded-full border px-2.5 py-0.5 text-[8px] font-black uppercase tracking-widest",
+                                              getStatusColor(status)
+                                            )}
+                                          >
+                                            {status ?? "Queueing"}
+                                          </span>
+                                        </div>
+                                        
+                                        <button
+                                          onClick={(e) => handleDelete(p.id, e)}
+                                          disabled={deletingId === p.id}
+                                          className="rounded-xl p-2 text-slate-600 transition-all hover:bg-red-500/10 hover:text-red-500 disabled:opacity-50"
+                                        >
+                                          <Trash2 className="h-4 w-4" />
+                                        </button>
+                                      </div>
+                                    </div>
+                                    {isSelected && (
+                                      <div className="absolute inset-y-0 left-0 w-1.5 bg-primary shadow-[4px_0_15px_rgba(177,197,255,0.4)]" />
+                                    )}
+                                  </MotionCard>
+                              );
+                            })}
+                          </div>
+                        )}
+                      </div>
                     </div>
                   </MotionCard>
                 </div>

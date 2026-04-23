@@ -162,94 +162,18 @@ export function AppSidebar({
         </div>
 
         <div className="flex flex-col gap-5 px-1">
-          {isPipeline ? (
-            <div className="glass-lift flex flex-col rounded-2xl border border-white/8 bg-gradient-to-br from-primary/12 via-white/4 to-secondary/8 p-1">
-              <div className="flex items-center justify-between px-3 py-3">
-                <div className="flex items-center gap-2">
-                  <span className={cn(
-                    "h-2 w-2 rounded-full shadow-[0_0_10px_#4edea3]",
-                    isRefreshing ? "animate-pulse bg-primary" : "bg-secondary"
-                  )} />
-                  <span className="font-label text-[10px] uppercase tracking-[0.24em] text-slate-300">
-                    Live Queue
-                  </span>
-                </div>
-                <button 
-                  onClick={(e) => { e.preventDefault(); fetchProspects(); }}
-                  disabled={isRefreshing}
-                  className="rounded-lg p-1 text-slate-400 hover:bg-white/5 hover:text-white transition-colors"
-                >
-                  <MaterialIcon name="refresh" className={cn("text-[14px]", isRefreshing && "animate-spin")} />
-                </button>
-              </div>
-
-              <div className="thin-scrollbar max-h-[320px] space-y-1 overflow-y-auto px-1 pb-2">
-                {prospects.length === 0 && !isRefreshing ? (
-                  <div className="px-3 py-4 text-center">
-                    <p className="text-xs text-slate-500">No prospects in queue</p>
-                  </div>
-                ) : (
-                  prospects.map((prospect) => {
-                    const isSelected = selectedId === prospect.id.toString();
-                    return (
-                      <Link
-                        key={prospect.id}
-                        href={`/pipeline?id=${prospect.id}`}
-                        className={cn(
-                          "group flex items-center gap-3 rounded-xl px-3 py-2.5 transition-all duration-200",
-                          isSelected
-                            ? "bg-white/10 shadow-sm border border-white/10"
-                            : "hover:bg-white/5 border border-transparent"
-                        )}
-                      >
-                        <div className={cn(
-                          "flex h-8 w-8 shrink-0 items-center justify-center rounded-lg font-headline text-xs font-bold",
-                          isSelected 
-                            ? "bg-primary text-white shadow-[0_0_15px_rgba(46,91,255,0.3)]" 
-                            : "bg-white/5 text-slate-400 group-hover:bg-white/10 group-hover:text-slate-200"
-                        )}>
-                          {prospect.ai_score || 0}
-                        </div>
-                        <div className="min-w-0 flex-1">
-                          <div className={cn(
-                            "truncate text-sm font-medium transition-colors",
-                            isSelected ? "text-white" : "text-slate-300 group-hover:text-white"
-                          )}>
-                            {prospect.company_name}
-                          </div>
-                          <div className="flex items-center gap-2 mt-0.5">
-                            <span className={cn(
-                              "h-1.5 w-1.5 rounded-full",
-                              prospect.status === 'completed' ? 'bg-secondary' : 'bg-amber-400'
-                            )} />
-                            <span className="text-[10px] uppercase tracking-wider text-slate-500 font-medium">
-                              {prospect.status}
-                            </span>
-                          </div>
-                        </div>
-                        {isSelected && (
-                          <div className="h-1.5 w-1.5 rounded-full bg-primary animate-pulse" />
-                        )}
-                      </Link>
-                    );
-                  })
-                )}
-              </div>
+          <div className="glass-lift rounded-2xl border border-white/8 bg-gradient-to-br from-primary/12 via-white/4 to-secondary/8 px-4 py-4">
+            <div className="mb-2 flex items-center gap-2">
+              <span className="h-2 w-2 rounded-full bg-secondary shadow-[0_0_10px_#4edea3]" />
+              <span className="font-label text-[10px] uppercase tracking-[0.24em] text-slate-300">
+                Live Sync
+              </span>
             </div>
-          ) : (
-            <div className="glass-lift rounded-2xl border border-white/8 bg-gradient-to-br from-primary/12 via-white/4 to-secondary/8 px-4 py-4">
-              <div className="mb-2 flex items-center gap-2">
-                <span className="h-2 w-2 rounded-full bg-secondary shadow-[0_0_10px_#4edea3]" />
-                <span className="font-label text-[10px] uppercase tracking-[0.24em] text-slate-300">
-                  Live Sync
-                </span>
-              </div>
-              <div className="font-headline text-xl font-bold text-white">94 high-intent accounts</div>
-              <p className="mt-1 text-sm leading-relaxed text-slate-400">
-                Pipeline signals, outreach, and approvals in one operating surface.
-              </p>
-            </div>
-          )}
+            <div className="font-headline text-xl font-bold text-white">{prospects.length} high-intent accounts</div>
+            <p className="mt-1 text-sm leading-relaxed text-slate-400">
+              Pipeline signals, outreach, and approvals in one operating surface.
+            </p>
+          </div>
         </div>
 
         <div className="thin-scrollbar flex-1 overflow-y-auto px-1 pb-2">

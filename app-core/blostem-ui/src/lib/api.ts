@@ -4,7 +4,7 @@ export async function fetchWithAuth(path: string, options: RequestInit = {}) {
   const supabase = createClient();
   const { data: { session } } = await supabase.auth.getSession();
   
-  const baseUrl = process.env.NEXT_PUBLIC_BACKEND_URL || "";
+  const baseUrl = process.env.NEXT_PUBLIC_BACKEND_URL || "http://localhost:8000";
   const url = path.startsWith("http") ? path : `${baseUrl}${path}`;
 
   const headers = new Headers(options.headers);
