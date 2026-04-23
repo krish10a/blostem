@@ -1,6 +1,6 @@
 "use client";
 
-import { ReactNode, useEffect, useState } from "react";
+import { ReactNode, Suspense, useEffect, useState } from "react";
 import { usePathname } from "next/navigation";
 import { motion, useReducedMotion } from "motion/react";
 import { AppSidebar } from "@/components/shell/AppSidebar";
@@ -23,7 +23,9 @@ export function AppChrome({ children }: { children: ReactNode }) {
       animate={reduceMotion ? undefined : { opacity: 1 }}
       transition={reduceMotion ? undefined : { duration: 0.45 }}
     >
-      <AppSidebar isOpen={sidebarOpen} onClose={() => setSidebarOpen(false)} />
+      <Suspense fallback={null}>
+        <AppSidebar isOpen={sidebarOpen} onClose={() => setSidebarOpen(false)} />
+      </Suspense>
 
       <div className="relative min-h-screen lg:pl-[20.25rem]">
         <div className="px-3 pt-3 sm:px-4 sm:pt-4 lg:px-6 lg:pt-5">

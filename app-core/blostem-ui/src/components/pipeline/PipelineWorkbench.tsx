@@ -104,8 +104,8 @@ function getStatusColor(status?: string | null): string {
 export default function PipelineWorkbench() {
   const [prospects, setProspects] = useState<Prospect[]>([]);
   const [selectedProspect, setSelectedProspect] = useState<Prospect | null>(null);
-  const searchParams = useSearchParams();
-  const urlId = searchParams.get("id");
+  const params = useSearchParams();
+  const urlId = params.get("id");
   const [activeTab, setActiveTab] = useState<"pipeline" | "analytics">("pipeline");
   const [deletingId, setDeletingId] = useState<number | null>(null);
   const [isRefreshing, setIsRefreshing] = useState(false);

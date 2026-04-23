@@ -59,8 +59,11 @@ export function AppSidebar({
     if (!isPipeline) return;
     try {
       setIsRefreshing(true);
-      const data = await fetchWithAuth(`${API_BASE_URL}/prospects/`);
-      setProspects(data);
+      const res = await fetchWithAuth(`${API_BASE_URL}/prospects/`);
+      if (res.ok) {
+        const data = await res.json();
+        setProspects(data);
+      }
     } catch (error) {
       console.error("Error fetching prospects in sidebar:", error);
     } finally {
