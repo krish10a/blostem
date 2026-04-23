@@ -360,9 +360,9 @@ export default function PipelineWorkbench() {
             {isRefreshing && prospects.length === 0 ? (
               <DashboardSkeleton />
             ) : (
-              <div className="grid w-full gap-10 lg:grid-cols-[380px_1fr]">
-                {/* Left Column: Intake & Queue (Unified Panel) */}
-                <div className="flex flex-col gap-6 lg:sticky lg:top-8 lg:h-[calc(100vh-12rem)] lg:self-start">
+              <div className="flex w-full min-h-[800px] overflow-hidden rounded-[40px] border border-white/10 bg-[#0b1326]/40 backdrop-blur-3xl">
+                {/* Left Column: Stationary Sidebar */}
+                <div className="w-[400px] flex-shrink-0 flex flex-col border-r border-white/5">
                   <PipelineIntakePanel
                     prospects={prospects}
                     selectedProspectId={selectedProspect?.id}
@@ -378,7 +378,7 @@ export default function PipelineWorkbench() {
                 </div>
 
                 {/* Right Column: Processing Surface */}
-                <div className="min-w-0 pb-20">
+                <div className="flex-1 min-w-0 overflow-y-auto p-8 lg:p-12 thin-scrollbar">
                   {!selectedProspect ? (
                     <MotionCard 
                       className="glass-panel flex h-[600px] flex-col items-center justify-center rounded-[40px] border border-dashed border-white/10" 
