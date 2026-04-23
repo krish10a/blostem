@@ -10,6 +10,15 @@ import {
   Table,
   Trash2,
   Zap,
+  Target,
+  Building2,
+  Users,
+  ChevronRight,
+  Plus,
+  LayoutGrid,
+  Search,
+  CheckCircle2,
+  AlertCircle
 } from "lucide-react";
 import ProspectCSVUpload from "@/components/ProspectCSVUpload";
 import ProspectIntakeForm from "@/components/ProspectIntakeForm";
@@ -23,6 +32,7 @@ import SignalIntelligencePanel from "@/components/SignalIntelligencePanel";
 import { DashboardSkeleton } from "@/components/LoadingSkeleton";
 import { MotionButton, MotionCard, MotionGroup, MotionSection } from "@/components/motion/BlostemMotion";
 import { fetchWithAuth } from "@/lib/api";
+import { cn } from "@/lib/utils";
 
 type Prospect = {
   id: number;
@@ -84,10 +94,10 @@ function parsePrimaryPersona(raw?: string | null): string | null {
 }
 
 function getStatusColor(status?: string | null): string {
-  if (status === "FLAGGED") return "bg-error/15 text-error ring-error/30";
-  if (status === "NEEDS_REVISION") return "bg-tertiary/15 text-tertiary ring-tertiary/30";
-  if (status === "APPROVED") return "bg-secondary/15 text-secondary ring-secondary/30";
-  return "bg-surface-container-highest/40 text-on-surface-variant ring-outline-variant/20";
+  if (status === "FLAGGED") return "bg-red-500/15 text-red-400 border-red-500/20";
+  if (status === "NEEDS_REVISION") return "bg-amber-500/15 text-amber-400 border-amber-500/20";
+  if (status === "APPROVED") return "bg-emerald-500/15 text-emerald-400 border-emerald-500/20";
+  return "bg-white/5 text-slate-500 border-white/10";
 }
 
 export default function PipelineWorkbench() {
@@ -254,382 +264,460 @@ export default function PipelineWorkbench() {
   };
 
   return (
-    <>
+    <div className="relative min-h-screen">
       <Toaster richColors position="top-right" />
-
-      <div className="mb-4 flex flex-col gap-4 xl:flex-row xl:items-center xl:justify-between">
-        <MotionCard className="glass-panel rounded-[28px] px-4 py-4 sm:px-5" hover={false}>
-          <div className="mb-2 flex flex-wrap items-center gap-2">
-            <span className="font-label text-[10px] uppercase tracking-[0.24em] text-primary">
-              Execution Surface
-            </span>
-            <span className="rounded-full border border-white/8 bg-white/5 px-2 py-0.5 text-[10px] font-semibold uppercase tracking-[0.2em] text-slate-400">
-              {prospects.length} accounts
-            </span>
-          </div>
-          <h2 className="font-headline text-2xl font-bold text-white">Pipeline Workbench</h2>
-          <p className="mt-2 max-w-2xl text-sm leading-relaxed text-on-surface-variant">
-            Add prospects, review queue quality, and run signal-to-outreach automation without losing
-            layout context on smaller screens.
-          </p>
-        </MotionCard>
-
-        <MotionSection className="flex flex-wrap items-center gap-3" delay={0.08}>
-          <div className="flex flex-wrap items-center gap-2 rounded-2xl border border-outline-variant/10 bg-surface-container-low/70 p-1.5">
-            <button
-              onClick={() => setActiveTab("pipeline")}
-              className={
-                activeTab === "pipeline"
-                  ? "rounded-xl bg-surface-variant px-3 py-2 text-xs font-semibold text-primary"
-                  : "rounded-xl px-3 py-2 text-xs font-medium text-on-surface-variant hover:text-on-surface"
-              }
-            >
-              Pipeline
-            </button>
-            <button
-              onClick={() => setActiveTab("analytics")}
-              className={
-                activeTab === "analytics"
-                  ? "inline-flex items-center gap-1 rounded-xl bg-surface-variant px-3 py-2 text-xs font-semibold text-primary"
-                  : "inline-flex items-center gap-1 rounded-xl px-3 py-2 text-xs font-medium text-on-surface-variant hover:text-on-surface"
-              }
-            >
-              <BarChart2 className="h-3.5 w-3.5" />
-              Analytics
-            </button>
-          </div>
-
-          <button
-            onClick={() => fetchProspects()}
-            disabled={isRefreshing}
-            className="inline-flex items-center gap-2 rounded-2xl border border-outline-variant/15 bg-surface-container-low/50 px-3.5 py-2 text-xs font-medium text-on-surface transition-all hover:bg-surface-container-high disabled:opacity-50"
-          >
-            <RefreshCw className={`h-3.5 w-3.5 ${isRefreshing ? "animate-spin" : ""}`} />
-            Refresh
-          </button>
-        </MotionSection>
+      
+      {/* Cinematic Background Elements */}
+      <div className="pointer-events-none fixed inset-0 z-0 overflow-hidden">
+        <div className="bg-mesh absolute inset-0 opacity-[0.03]" />
+        <div className="animate-mesh absolute -top-[10%] -left-[10%] h-[40%] w-[40%] rounded-full bg-primary/10 blur-[120px]" />
+        <div className="animate-mesh-slow absolute top-[20%] -right-[10%] h-[50%] w-[50%] rounded-full bg-secondary/5 blur-[120px]" />
       </div>
 
-      {activeTab === "analytics" ? (
-        <div className="mt-8">
-          <AnalyticsDashboard />
+      <div className="relative z-10 px-4 py-8 sm:px-6 lg:px-8">
+        <div className="mb-10 flex flex-col gap-6 xl:flex-row xl:items-center xl:justify-between">
+          <MotionCard className="glass-panel relative flex-1 overflow-hidden rounded-[32px] p-8 sm:p-10" hover={false}>
+            <div className="absolute top-0 right-0 p-8 opacity-10">
+              <Zap className="h-40 w-40 text-primary" />
+            </div>
+            <div className="relative z-10">
+              <div className="mb-4 flex flex-wrap items-center gap-3">
+                <span className="font-mono-ui text-[10px] font-black uppercase tracking-[0.4em] text-primary">
+                  Operational Layer
+                </span>
+                <div className="h-1 w-1 rounded-full bg-slate-700" />
+                <span className="rounded-full border border-white/10 bg-white/5 px-3 py-1 text-[10px] font-black uppercase tracking-[0.2em] text-slate-400">
+                  {prospects.length} Active Accounts
+                </span>
+              </div>
+              <h2 className="font-headline text-gradient text-5xl font-black tracking-tighter sm:text-6xl">
+                Pipeline Workbench
+              </h2>
+              <p className="mt-4 max-w-2xl text-base font-medium leading-relaxed text-slate-400">
+                Orchestrate high-fidelity outreach with cinematic precision. Add prospects, 
+                extract market intelligence, and automate multi-channel generation in real-time.
+              </p>
+            </div>
+          </MotionCard>
+
+          <MotionSection className="flex flex-wrap items-center gap-4" delay={0.08}>
+            <div className="flex items-center gap-2 rounded-2xl border border-white/8 bg-[#0b1326]/60 p-1.5 backdrop-blur-2xl">
+              <button
+                onClick={() => setActiveTab("pipeline")}
+                className={cn(
+                  "haptic-hover flex items-center gap-2 rounded-xl px-5 py-2.5 text-xs font-black uppercase tracking-[0.15em] transition-all",
+                  activeTab === "pipeline"
+                    ? "bg-primary text-on-primary shadow-xl shadow-primary/20"
+                    : "text-slate-500 hover:text-slate-200"
+                )}
+              >
+                <Zap className="h-3.5 w-3.5" />
+                Pipeline
+              </button>
+              <button
+                onClick={() => setActiveTab("analytics")}
+                className={cn(
+                  "haptic-hover flex items-center gap-2 rounded-xl px-5 py-2.5 text-xs font-black uppercase tracking-[0.15em] transition-all",
+                  activeTab === "analytics"
+                    ? "bg-primary text-on-primary shadow-xl shadow-primary/20"
+                    : "text-slate-500 hover:text-slate-200"
+                )}
+              >
+                <BarChart2 className="h-3.5 w-3.5" />
+                Analytics
+              </button>
+            </div>
+
+            <button
+              onClick={() => fetchProspects()}
+              disabled={isRefreshing}
+              className="glass-button haptic-hover flex items-center gap-2 rounded-2xl border border-white/10 bg-white/5 px-6 py-3.5 text-xs font-black uppercase tracking-widest text-white transition-all hover:bg-white/10 disabled:opacity-50"
+            >
+              <RefreshCw className={cn("h-4 w-4", isRefreshing && "animate-spin")} />
+              Sync
+            </button>
+          </MotionSection>
         </div>
-      ) : (
-        <div className="mt-8">
-          {isRefreshing && prospects.length === 0 ? (
-            <DashboardSkeleton />
-          ) : (
-            <div className="grid w-full max-w-[1600px] gap-6 xl:grid-cols-[minmax(360px,420px)_minmax(0,1fr)]">
-              <div className="flex min-w-0 flex-col gap-4 xl:sticky xl:top-28 xl:self-start">
-                <MotionCard className="glass-panel rounded-[28px] p-4 sm:p-5" hover={false}>
-                  <div className="grid gap-5">
-                    <div>
-                      <h3 className="mb-3 font-headline text-sm font-semibold uppercase tracking-wider text-on-surface">
-                        Add Prospect
-                      </h3>
-                      <ProspectIntakeForm
-                        onProspectAdded={() => {
-                          void fetchProspects();
-                          toast.success("Prospect added to pipeline.");
-                        }}
-                      />
-                    </div>
 
-                    <div>
-                      <h3 className="mb-3 font-headline text-sm font-semibold uppercase tracking-wider text-on-surface">
-                        Bulk CSV Upload
-                      </h3>
-                      <ProspectCSVUpload
-                        onProspectAdded={() => {
-                          void fetchProspects();
-                          toast.success("CSV uploaded successfully.");
-                        }}
-                      />
-                    </div>
-
-                    <button
-                      onClick={async () => {
-                        if (!confirm("Seed 10 demo prospects?")) return;
-                        await fetchWithAuth("/prospects/seed-sample-data", {
-                          method: "POST",
-                        });
-                        void fetchProspects();
-                      }}
-                      className="haptic-hover flex w-full items-center justify-center gap-2 rounded-2xl border border-dashed border-outline-variant/40 py-2.5 text-sm font-medium text-on-surface-variant transition-all hover:border-outline-variant hover:bg-surface-container hover:text-on-surface"
-                    >
-                      <Sparkles className="h-4 w-4" />
-                      Seed Demo Data
-                    </button>
-                  </div>
-                </MotionCard>
-
-                <MotionCard className="glass-panel relative flex min-h-[360px] flex-1 flex-col overflow-hidden rounded-[28px]" delay={0.06} hover={false}>
-                  <div className="sticky top-0 z-10 flex flex-wrap items-center justify-between gap-3 border-b border-outline-variant/10 bg-surface-container-low/95 p-4">
-                    <div className="flex items-center gap-2">
-                      <h3 className="font-headline text-sm font-semibold text-on-surface">Active Queue</h3>
-                      <span className="animate-soft-pulse rounded-full bg-surface-container-highest px-2 py-0.5 text-[10px] text-on-surface-variant">
-                        {prospects.length}
-                      </span>
-                    </div>
-
-                    <div className="flex items-center gap-1 rounded-xl border border-outline-variant/10 bg-surface-container p-0.5">
-                      <button
-                        onClick={() => setProspectListMode("cards")}
-                        className={
-                          prospectListMode === "cards"
-                            ? "rounded-lg bg-surface-variant px-2 py-1 text-primary shadow-sm text-xs"
-                            : "rounded-lg px-2 py-1 text-on-surface-variant hover:text-on-surface text-xs"
-                        }
-                      >
-                        Cards
-                      </button>
-                      <button
-                        onClick={() => setProspectListMode("table")}
-                        className={
-                          prospectListMode === "table"
-                            ? "inline-flex items-center gap-1 rounded-lg bg-surface-variant px-2 py-1 text-primary shadow-sm text-xs"
-                            : "inline-flex items-center gap-1 rounded-lg px-2 py-1 text-on-surface-variant hover:text-on-surface text-xs"
-                        }
-                      >
-                        <Table className="h-3 w-3" />
-                        Table
-                      </button>
-                    </div>
-                  </div>
-
-                  {selectedIds.size > 0 && (
-                    <div className="flex flex-wrap items-center justify-between gap-3 border-b border-primary/20 bg-primary-container/70 p-3">
-                      <div className="text-xs font-bold uppercase tracking-widest text-white">
-                        {selectedIds.size} selected
+        {activeTab === "analytics" ? (
+          <div className="animate-fade-up">
+            <AnalyticsDashboard />
+          </div>
+        ) : (
+          <div className="animate-fade-up">
+            {isRefreshing && prospects.length === 0 ? (
+              <DashboardSkeleton />
+            ) : (
+              <div className="grid w-full gap-10 xl:grid-cols-[400px_1fr]">
+                {/* Left Column: Intake & Queue */}
+                <div className="flex flex-col gap-8 xl:sticky xl:top-8 xl:h-[calc(100vh-10rem)] xl:self-start">
+                  <MotionCard className="glass-panel flex flex-col gap-8 rounded-[32px] p-8" hover={false}>
+                    <div className="space-y-8">
+                      <div>
+                        <h3 className="mb-5 flex items-center gap-2 font-headline text-[10px] font-black uppercase tracking-[0.3em] text-primary">
+                          <Plus className="h-3.5 w-3.5" />
+                          Intake Protocol
+                        </h3>
+                        <ProspectIntakeForm
+                          onProspectAdded={() => {
+                            void fetchProspects();
+                            toast.success("Prospect injected into stream.");
+                          }}
+                        />
                       </div>
+
+                      <div className="border-t border-white/8 pt-8">
+                        <h3 className="mb-5 flex items-center gap-2 font-headline text-[10px] font-black uppercase tracking-[0.3em] text-secondary">
+                          <Table className="h-3.5 w-3.5" />
+                          Mass Ingestion
+                        </h3>
+                        <ProspectCSVUpload
+                          onProspectAdded={() => {
+                            void fetchProspects();
+                            toast.success("CSV stream verified.");
+                          }}
+                        />
+                      </div>
+
                       <button
-                        onClick={handleBatchDelete}
-                        className="inline-flex items-center gap-2 rounded-full bg-white px-3 py-1.5 text-[10px] font-black text-primary-container transition-all hover:bg-red-50 hover:text-red-600 active:scale-95"
+                        onClick={async () => {
+                          if (!confirm("Seed 10 demo prospects?")) return;
+                          await fetchWithAuth("/prospects/seed-sample-data", {
+                            method: "POST",
+                          });
+                          void fetchProspects();
+                        }}
+                        className="glass-button haptic-hover group flex w-full items-center justify-center gap-3 rounded-2xl border border-dashed border-white/20 py-4 text-xs font-black uppercase tracking-widest text-slate-500 transition-all hover:border-primary/50 hover:text-primary"
                       >
-                        <Trash2 className="h-3 w-3" />
-                        Delete Selected
+                        <Sparkles className="h-4 w-4 transition-transform group-hover:scale-110" />
+                        Initialize Demo Seed
                       </button>
                     </div>
-                  )}
+                  </MotionCard>
 
-                  <div className="thin-scrollbar flex-1 space-y-1 overflow-y-auto p-2" ref={sidebarRef}>
-                    {prospects.length === 0 ? (
-                      <div className="p-8 text-center text-sm text-on-surface-variant">
-                        No prospects yet. Add a company above to begin.
+                  <MotionCard className="glass-panel flex flex-1 flex-col overflow-hidden rounded-[32px]" delay={0.06} hover={false}>
+                    <div className="sticky top-0 z-20 flex flex-wrap items-center justify-between gap-4 border-b border-white/8 bg-[#0b1326]/60 p-6 backdrop-blur-2xl">
+                      <div className="flex items-center gap-3">
+                        <h3 className="font-headline text-[10px] font-black uppercase tracking-[0.3em] text-white">Execution Queue</h3>
+                        <span className="flex h-5 items-center justify-center rounded-full bg-primary/20 px-2.5 text-[9px] font-black text-primary shadow-[0_0_20px_rgba(177,197,255,0.2)]">
+                          {prospects.length}
+                        </span>
                       </div>
-                    ) : prospectListMode === "table" ? (
-                      <table className="w-full text-left text-sm">
-                        <thead className="text-[10px] uppercase tracking-widest text-on-surface-variant">
-                          <tr>
-                            <th className="px-3 py-2">Account</th>
-                            <th className="px-3 py-2 text-right">Priority</th>
-                          </tr>
-                        </thead>
-                        <tbody>
+
+                      <div className="flex items-center gap-1 rounded-xl border border-white/8 bg-white/4 p-0.5">
+                        <button
+                          onClick={() => setProspectListMode("cards")}
+                          className={cn(
+                            "rounded-lg px-3 py-1.5 text-[9px] font-black uppercase tracking-[0.15em] transition-all",
+                            prospectListMode === "cards" ? "bg-primary text-white shadow-lg" : "text-slate-500 hover:text-slate-300"
+                          )}
+                        >
+                          Grid
+                        </button>
+                        <button
+                          onClick={() => setProspectListMode("table")}
+                          className={cn(
+                            "inline-flex items-center gap-1 rounded-lg px-3 py-1.5 text-[9px] font-black uppercase tracking-[0.15em] transition-all",
+                            prospectListMode === "table" ? "bg-primary text-white shadow-lg" : "text-slate-500 hover:text-slate-300"
+                          )}
+                        >
+                          <Table className="h-3 w-3" />
+                          List
+                        </button>
+                      </div>
+                    </div>
+
+                    {selectedIds.size > 0 && (
+                      <div className="flex items-center justify-between bg-primary/10 p-4 backdrop-blur-md">
+                        <span className="text-[10px] font-black uppercase tracking-widest text-primary">
+                          {selectedIds.size} Marked
+                        </span>
+                        <button
+                          onClick={handleBatchDelete}
+                          className="haptic-hover flex items-center gap-2 rounded-full bg-white px-4 py-1.5 text-[9px] font-black uppercase tracking-widest text-primary transition-all hover:bg-red-500 hover:text-white"
+                        >
+                          <Trash2 className="h-3.5 w-3.5" />
+                          Purge
+                        </button>
+                      </div>
+                    )}
+
+                    <div className="thin-scrollbar flex-1 space-y-3 overflow-y-auto p-5" ref={sidebarRef}>
+                      {prospects.length === 0 ? (
+                        <div className="flex h-full min-h-[300px] flex-col items-center justify-center text-center">
+                          <div className="mb-6 flex h-16 w-16 items-center justify-center rounded-full bg-white/5">
+                            <Search className="h-8 w-8 text-slate-700" />
+                          </div>
+                          <p className="text-[10px] font-black uppercase tracking-[0.3em] text-slate-600">
+                            Queue Empty
+                          </p>
+                        </div>
+                      ) : prospectListMode === "table" ? (
+                        <div className="space-y-1">
                           {prospects.map((p) => {
                             const isSelected = selectedProspect?.id === p.id;
                             return (
-                              <tr
+                              <div
                                 key={p.id}
                                 onClick={() => setSelectedProspect(p)}
-                                className={
+                                className={cn(
+                                  "group flex cursor-pointer items-center justify-between rounded-xl border px-4 py-3.5 transition-all",
                                   isSelected
-                                    ? "cursor-pointer bg-primary/10"
-                                    : "cursor-pointer hover:bg-surface-container-highest/30"
-                                }
+                                    ? "border-primary/30 bg-primary/10"
+                                    : "border-transparent hover:bg-white/5"
+                                )}
                               >
-                                <td className="px-3 py-2">
-                                  <div className="max-w-[280px] truncate font-medium text-on-surface">
+                                <div className="min-w-0 flex-1">
+                                  <div className="truncate font-headline text-sm font-black tracking-tight text-white">
                                     {p.company_name}
                                   </div>
-                                  <div className="max-w-[280px] truncate text-[10px] text-on-surface-variant">
-                                    {p.industry || "N/A"}
+                                  <div className="mt-1 flex items-center gap-2 text-[10px] font-bold text-slate-500">
+                                    {p.industry || "General"}
                                   </div>
-                                </td>
-                                <td className="px-3 py-2 text-right font-mono text-on-surface">
-                                  {(p.priority_score || 0).toFixed(0)}
-                                </td>
-                              </tr>
+                                </div>
+                                <div className="flex items-center gap-4">
+                                  <span className={cn(
+                                    "font-mono text-xs font-black",
+                                    (p.priority_score || 0) >= 80 ? "text-secondary" : "text-slate-500"
+                                  )}>
+                                    {(p.priority_score || 0).toFixed(0)}
+                                  </span>
+                                  <ChevronRight className={cn("h-4 w-4 transition-transform", isSelected ? "rotate-90 text-primary" : "text-slate-700")} />
+                                </div>
+                              </div>
                             );
                           })}
-                        </tbody>
-                      </table>
-                    ) : (
-                      <div className="space-y-2">
-                        {prospects.map((p, index) => {
-                          const status = parseComplianceStatus(p.compliance_status);
-                          const isSelected = selectedProspect?.id === p.id;
-                          const isChecked = selectedIds.has(p.id);
-                          return (
-                              <MotionCard
-                                key={p.id}
-                                className={
-                                  isSelected
-                                    ? "ambient-shadow haptic-hover group cursor-pointer rounded-[22px] border border-primary/20 bg-surface-container-highest p-4"
-                                    : "haptic-hover cursor-pointer rounded-[22px] border border-transparent bg-surface-container p-4 transition-all hover:border-outline-variant/20 hover:bg-surface-container-high"
-                                }
-                                delay={Math.min(index * 0.035, 0.21)}
-                              >
-                                <div onClick={() => setSelectedProspect(p)}>
-                              <div className="flex items-start justify-between gap-3">
-                                <div className="min-w-0">
-                                  <div className="truncate font-headline text-sm font-bold text-on-surface">
-                                    {p.company_name}
-                                  </div>
-                                  <div className="mt-0.5 truncate text-xs text-on-surface-variant">
-                                    {(parsePrimaryPersona(p.persona_map) ?? "N/A") +
-                                      (p.industry ? ` - ${p.industry}` : "")}
-                                  </div>
-                                </div>
-
-                                <div className="flex items-center gap-2">
-                                  <span className="flex items-center gap-1 rounded border border-outline-variant/20 bg-secondary-container/20 px-1.5 py-0.5 text-[10px] font-bold text-secondary">
-                                    <span className="h-1.5 w-1.5 rounded-full bg-secondary" />
-                                    {(p.priority_score ?? 0).toFixed(0)}
-                                  </span>
-                                  <span
-                                    className={`rounded-full px-2 py-0.5 text-[10px] font-bold ring-1 ${getStatusColor(status)}`}
-                                  >
-                                    {status ?? "UNCHECKED"}
-                                  </span>
-                                  <button
-                                    onClick={(e) => handleDelete(p.id, e)}
-                                    disabled={deletingId === p.id}
-                                    className="rounded-full p-1 text-on-surface-variant transition-all hover:bg-error/10 hover:text-error disabled:opacity-50"
-                                    title="Delete prospect"
-                                  >
-                                    <Trash2 className="h-3.5 w-3.5" />
-                                  </button>
-                                </div>
-                              </div>
-
-                              <div className="mt-3 flex items-center justify-between">
-                                <label className="inline-flex items-center gap-2 text-xs text-on-surface-variant">
-                                  <input
-                                    type="checkbox"
-                                    checked={isChecked}
-                                    onChange={(e) => toggleSelect(p.id, e)}
-                                  />
-                                  Select
-                                </label>
-                              </div>
-                                </div>
-                              </MotionCard>
-                          );
-                        })}
-                      </div>
-                    )}
-                  </div>
-                </MotionCard>
-              </div>
-
-              <div className="min-w-0 pb-8 xl:max-h-[calc(100vh-9rem)] xl:overflow-y-auto xl:pr-2">
-                {!selectedProspect ? (
-                  <MotionCard className="glass-panel flex h-64 items-center justify-center rounded-[28px] border border-dashed border-outline-variant/20 text-sm text-on-surface-variant" hover={false}>
-                    Select a prospect to begin AI processing.
-                  </MotionCard>
-                ) : (
-                  <MotionGroup className="flex flex-col gap-4">
-                    <MotionCard className="glass-panel relative overflow-hidden rounded-[30px] p-6" delay={0.1} hover={false}>
-                      <div className="flex flex-wrap items-start justify-between gap-4">
-                        <div className="min-w-0">
-                          <h2 className="font-headline text-2xl font-bold tracking-tight text-on-surface">
-                            {selectedProspect.company_name}
-                          </h2>
-                          <p className="mt-1 text-sm text-on-surface-variant">
-                            {selectedProspect.industry || "Unknown Industry"}
-                            {selectedProspect.size ? ` - ${selectedProspect.size}` : ""}
-                            {selectedProspect.website ? ` - ${selectedProspect.website}` : ""}
-                          </p>
                         </div>
+                      ) : (
+                        <div className="space-y-4">
+                          {prospects.map((p, index) => {
+                            const status = parseComplianceStatus(p.compliance_status);
+                            const isSelected = selectedProspect?.id === p.id;
+                            const isChecked = selectedIds.has(p.id);
+                            return (
+                                <MotionCard
+                                  key={p.id}
+                                  className={cn(
+                                    "group relative cursor-pointer overflow-hidden rounded-[24px] border transition-all duration-500",
+                                    isSelected
+                                      ? "ambient-shadow border-primary/40 bg-primary/10 ring-1 ring-primary/20"
+                                      : "border-white/5 bg-white/[0.02] hover:border-white/15 hover:bg-white/5"
+                                  )}
+                                  delay={Math.min(index * 0.035, 0.21)}
+                                >
+                                  <div className="p-5" onClick={() => setSelectedProspect(p)}>
+                                    <div className="flex items-start justify-between gap-4">
+                                      <div className="min-w-0 flex-1">
+                                        <div className="truncate font-headline text-lg font-black tracking-tighter text-white">
+                                          {p.company_name}
+                                        </div>
+                                        <div className="mt-1.5 flex items-center gap-2 truncate text-[9px] font-black uppercase tracking-widest text-slate-500">
+                                          <Target className="h-3 w-3 text-primary/60" />
+                                          {parsePrimaryPersona(p.persona_map) ?? "Awaiting Profiling"}
+                                        </div>
+                                      </div>
 
-                        <MotionButton>
-                          <button
-                          onClick={handleRunFullPipeline}
-                          disabled={pipelineRunning}
-                          className="btn-pipeline inline-flex items-center gap-2 rounded-full bg-gradient-to-r from-primary to-primary-container px-4 py-2.5 text-sm font-semibold text-on-primary shadow-[0_0_15px_rgba(17,101,231,0.3)] disabled:opacity-60"
-                          title="Sequentially run: Signals -> Score -> Personas -> Outreach"
-                        >
-                          {pipelineRunning ? (
-                            <Loader2 className="h-4 w-4 animate-spin" />
-                          ) : (
-                            <Zap className="h-4 w-4" />
-                          )}
-                          {pipelineRunning ? (pipelineStep ?? "Running...") : "Run Full Pipeline"}
-                        </button>
-                        </MotionButton>
-                      </div>
+                                      <div className="flex flex-col items-end gap-2">
+                                        <div className="flex items-center gap-1.5 rounded-xl border border-white/10 bg-[#0b1326]/60 px-3 py-1.5 backdrop-blur-md">
+                                          <div className="h-1.5 w-1.5 animate-pulse rounded-full bg-primary shadow-[0_0_8px_#b1c5ff]" />
+                                          <span className="font-mono text-xs font-black text-white">
+                                            {(p.priority_score ?? 0).toFixed(0)}
+                                          </span>
+                                        </div>
+                                      </div>
+                                    </div>
 
-                      {pipelineRunning && (
-                        <div className="mt-4">
-                          <div className="mb-1 flex items-center justify-between text-[10px] text-on-surface-variant">
-                            <span>{pipelineStep ?? "Initializing..."}</span>
-                            <span className="animate-pulse text-primary">AI Processing</span>
-                          </div>
-                          <div className="h-1 w-full overflow-hidden rounded-full bg-surface-container-highest">
-                            <div className="h-full w-2/3 rounded-full bg-gradient-to-r from-primary-container to-primary animate-pulse" />
-                          </div>
+                                    <div className="mt-5 flex items-center justify-between border-t border-white/6 pt-4">
+                                      <div className="flex items-center gap-3">
+                                        <input
+                                          type="checkbox"
+                                          checked={isChecked}
+                                          onChange={(e) => toggleSelect(p.id, e)}
+                                          className="h-4 w-4 rounded border-white/10 bg-white/5 text-primary focus:ring-0 focus:ring-offset-0"
+                                        />
+                                        <span
+                                          className={cn(
+                                            "rounded-full border px-2.5 py-0.5 text-[8px] font-black uppercase tracking-widest",
+                                            getStatusColor(status)
+                                          )}
+                                        >
+                                          {status ?? "Queueing"}
+                                        </span>
+                                      </div>
+                                      
+                                      <button
+                                        onClick={(e) => handleDelete(p.id, e)}
+                                        disabled={deletingId === p.id}
+                                        className="rounded-xl p-2 text-slate-600 transition-all hover:bg-red-500/10 hover:text-red-500 disabled:opacity-50"
+                                      >
+                                        <Trash2 className="h-4 w-4" />
+                                      </button>
+                                    </div>
+                                  </div>
+                                  {isSelected && (
+                                    <div className="absolute inset-y-0 left-0 w-1.5 bg-primary shadow-[4px_0_15px_rgba(177,197,255,0.4)]" />
+                                  )}
+                                </MotionCard>
+                            );
+                          })}
                         </div>
                       )}
+                    </div>
+                  </MotionCard>
+                </div>
+
+                {/* Right Column: Processing Surface */}
+                <div className="min-w-0 pb-20">
+                  {!selectedProspect ? (
+                    <MotionCard 
+                      className="glass-panel flex h-[600px] flex-col items-center justify-center rounded-[40px] border border-dashed border-white/10" 
+                      hover={false}
+                    >
+                      <div className="mb-8 rounded-full bg-white/5 p-10">
+                        <Sparkles className="h-16 w-16 text-slate-700" />
+                      </div>
+                      <h3 className="font-headline text-2xl font-black tracking-tight text-white">System Standby</h3>
+                      <p className="mt-3 max-w-md text-center text-base font-medium text-slate-500">
+                        Select a high-intent account from the queue to initialize the AI 
+                        orchestration stream and multi-channel sequence engine.
+                      </p>
                     </MotionCard>
+                  ) : (
+                    <MotionGroup className="flex flex-col gap-10">
+                      {/* Detailed Header */}
+                      <MotionCard className="mouse-glow glass-panel relative overflow-hidden rounded-[40px] p-8 sm:p-12" delay={0.1} hover={false}>
+                        <div className="absolute top-0 right-0 h-96 w-96 translate-x-1/3 -translate-y-1/3 rounded-full bg-primary/10 blur-[120px]" />
+                        
+                        <div className="flex flex-wrap items-start justify-between gap-10">
+                          <div className="min-w-0 flex-1">
+                            <div className="mb-4 flex items-center gap-3">
+                              <span className="flex items-center gap-2 rounded-xl bg-primary/10 px-3 py-1 text-[10px] font-black uppercase tracking-widest text-primary border border-primary/20">
+                                <span className="h-1.5 w-1.5 animate-pulse rounded-full bg-primary" />
+                                Active Sequence
+                              </span>
+                              {selectedProspect.website && (
+                                <a 
+                                  href={`https://${selectedProspect.website}`} 
+                                  target="_blank" 
+                                  rel="noreferrer"
+                                  className="text-xs font-bold text-slate-500 hover:text-primary transition-colors"
+                                >
+                                  {selectedProspect.website}
+                                </a>
+                              )}
+                            </div>
+                            <h2 className="font-headline text-5xl font-black tracking-tighter text-white sm:text-6xl">
+                              {selectedProspect.company_name}
+                            </h2>
+                            <div className="mt-6 flex flex-wrap items-center gap-6">
+                              <div className="flex items-center gap-3 text-sm font-bold text-slate-400">
+                                <Building2 className="h-4 w-4 text-primary" />
+                                {selectedProspect.industry || "Market Vertical Unspecified"}
+                              </div>
+                              {selectedProspect.size && (
+                                <div className="flex items-center gap-3 text-sm font-bold text-slate-400">
+                                  <Users className="h-4 w-4 text-secondary" />
+                                  {selectedProspect.size} Unit Capacity
+                                </div>
+                              )}
+                            </div>
+                          </div>
 
-                    {selectedProspect.next_action && (
-                      <SalesActionPanel
-                        key={`action-${selectedProspect.id}`}
-                        prospect={selectedProspect}
-                      />
-                    )}
+                          <button
+                            onClick={handleRunFullPipeline}
+                            disabled={pipelineRunning}
+                            className="haptic-hover group relative inline-flex h-20 items-center gap-4 rounded-[28px] bg-white px-10 text-sm font-black uppercase tracking-[0.2em] text-primary transition-all hover:bg-primary hover:text-white disabled:opacity-50"
+                          >
+                            {pipelineRunning ? (
+                              <Loader2 className="h-6 w-6 animate-spin" />
+                            ) : (
+                              <Zap className="h-6 w-6 transition-transform group-hover:scale-110" />
+                            )}
+                            {pipelineRunning ? (pipelineStep ?? "Processing...") : "Start Automation"}
+                            {!pipelineRunning && (
+                              <div className="absolute inset-0 -z-10 rounded-[28px] bg-primary/20 blur-2xl opacity-0 transition-opacity group-hover:opacity-100" />
+                            )}
+                          </button>
+                        </div>
 
-                    <SignalIntelligencePanel
-                      prospect={selectedProspect}
-                      key={`signals-${selectedProspect.id}`}
-                      onSignalsGenerated={() => {
-                        void fetchProspects(false);
-                        toast.success("Signals generated successfully.");
-                      }}
-                    />
+                        {pipelineRunning && (
+                          <div className="mt-12">
+                            <div className="mb-4 flex items-center justify-between">
+                              <div className="flex items-center gap-3">
+                                <span className="h-2.5 w-2.5 animate-ping rounded-full bg-primary" />
+                                <span className="text-[11px] font-black uppercase tracking-[0.3em] text-white">
+                                  {pipelineStep ?? "Syncing Context..."}
+                                </span>
+                              </div>
+                              <span className="font-mono text-[10px] font-bold text-primary opacity-60">AI CORE ACTIVE</span>
+                            </div>
+                            <div className="h-3 w-full overflow-hidden rounded-full bg-white/5 border border-white/5">
+                              <div className="animate-shimmer h-full w-[65%] rounded-full bg-gradient-to-r from-primary via-secondary to-primary shadow-[0_0_30px_rgba(17,101,231,0.6)]" />
+                            </div>
+                          </div>
+                        )}
+                      </MotionCard>
 
-                    {selectedProspect.signals && (
-                      <PersonaMappingPanel
-                        prospect={selectedProspect}
-                        key={`persona-${selectedProspect.id}`}
-                        onPersonasGenerated={() => {
-                          void fetchProspects(false);
-                          toast.success("Personas mapped successfully.");
-                        }}
-                      />
-                    )}
+                      <div className="flex flex-col gap-10">
+                        {selectedProspect.next_action && (
+                          <SalesActionPanel
+                            key={`action-${selectedProspect.id}`}
+                            prospect={selectedProspect}
+                          />
+                        )}
 
-                    {selectedProspect.persona_map && (
-                      <OutreachGenerationPanel
-                        key={`outreach-${selectedProspect.id}`}
-                        prospect={selectedProspect}
-                        onUpdate={handleProspectUpdate}
-                      />
-                    )}
-
-                    {selectedProspect.messages && (
-                      <CompliancePanel
-                        key={`compliance-${selectedProspect.id}`}
-                        prospect={selectedProspect}
-                      />
-                    )}
-
-                    {selectedProspect.sequence_plan && (
-                      <MotionSection className="mt-2 min-w-0 border-t border-outline-variant/10 pt-6" delay={0.12}>
-                        <SequenceTimeline
-                          planJson={selectedProspect.sequence_plan}
-                          companyName={selectedProspect.company_name}
+                        <SignalIntelligencePanel
+                          prospect={selectedProspect}
+                          key={`signals-${selectedProspect.id}`}
+                          onSignalsGenerated={() => {
+                            void fetchProspects(false);
+                            toast.success("Intelligence stream extracted.");
+                          }}
                         />
-                      </MotionSection>
-                    )}
-                  </MotionGroup>
-                )}
+
+                        {selectedProspect.signals && (
+                          <PersonaMappingPanel
+                            prospect={selectedProspect}
+                            key={`persona-${selectedProspect.id}`}
+                            onPersonasGenerated={() => {
+                              void fetchProspects(false);
+                              toast.success("Personas mapped to intelligence.");
+                            }}
+                          />
+                        )}
+
+                        {selectedProspect.persona_map && (
+                          <OutreachGenerationPanel
+                            key={`outreach-${selectedProspect.id}`}
+                            prospect={selectedProspect}
+                            onUpdate={handleProspectUpdate}
+                          />
+                        )}
+
+                        {selectedProspect.messages && (
+                          <CompliancePanel
+                            key={`compliance-${selectedProspect.id}`}
+                            prospect={selectedProspect}
+                          />
+                        )}
+
+                        {selectedProspect.sequence_plan && (
+                          <MotionSection className="mt-8 border-t border-white/8 pt-12" delay={0.12}>
+                            <SequenceTimeline
+                              planJson={selectedProspect.sequence_plan}
+                              companyName={selectedProspect.company_name}
+                            />
+                          </MotionSection>
+                        )}
+                      </div>
+                    </MotionGroup>
+                  )}
+                </div>
               </div>
-            </div>
-          )}
-        </div>
-      )}
-    </>
+            )}
+          </div>
+        )}
+      </div>
+    </div>
   );
 }

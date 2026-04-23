@@ -3,6 +3,8 @@
 import { useState } from "react";
 import { Zap, AlertCircle, RefreshCw, ChevronRight } from "lucide-react";
 import { fetchWithAuth } from "@/lib/api";
+import { cn } from "@/lib/utils";
+import { MotionCard, MotionButton } from "@/components/motion/BlostemMotion";
 
 type SignalsPayload = {
   signal_summary?: string;
@@ -86,52 +88,63 @@ export default function SignalIntelligencePanel({ prospect, onSignalsGenerated }
   }
 
   return (
-    <div className="mouse-glow reveal haptic-hover animate-fade-in-up rounded-xl border border-white/10 bg-black/20 p-5 backdrop-blur-sm w-full">
+    <MotionCard className="glass-panel mouse-glow relative overflow-hidden rounded-[32px] p-8" hover={false} delay={0.05}>
       {/* Header */}
-      <div className="flex items-center justify-between mb-4">
-        <div className="flex items-center gap-2">
-          <Zap className="h-5 w-5 text-indigo-400" />
-          <h3 className="text-base font-bold text-white">AI Signal Intelligence</h3>
-          {parsedSignals && (
-            <span className="inline-flex items-center gap-1 rounded-full bg-emerald-500/15 border border-emerald-500/25 px-2 py-0.5 text-[10px] font-semibold text-emerald-400">
-              ✓ Signals Ready
-            </span>
-          )}
+      <div className="mb-8 flex flex-wrap items-center justify-between gap-6">
+        <div className="flex items-center gap-4">
+          <div className="flex h-12 w-12 items-center justify-center rounded-2xl border border-primary/20 bg-primary/10 shadow-[0_0_20px_rgba(177,197,255,0.15)]">
+            <Zap className="h-6 w-6 text-primary" />
+          </div>
+          <div>
+            <div className="flex items-center gap-3">
+              <h3 className="font-headline text-lg font-black tracking-tight text-white uppercase">AI Signal Intelligence</h3>
+              {parsedSignals && (
+                <span className="inline-flex items-center gap-1.5 rounded-full border border-secondary/20 bg-secondary/10 px-2.5 py-0.5 text-[9px] font-black uppercase tracking-wider text-secondary">
+                  <span className="h-1 w-1 rounded-full bg-secondary shadow-[0_0_8px_#4adea3]" />
+                  Signals Active
+                </span>
+              )}
+            </div>
+            <p className="mt-1 text-xs font-medium text-slate-400 tracking-wide">
+              Proprietary market signals synthesized for <span className="font-bold text-white">{prospect?.company_name}</span>.
+            </p>
+          </div>
         </div>
+
         {parsedSignals && (
-          <button
-            onClick={handleGenerate}
-            disabled={loading}
-            className="flex items-center gap-1.5 rounded-lg border border-white/10 bg-white/5 px-2.5 py-1.5 text-xs font-medium text-zinc-400 hover:text-white hover:bg-white/10 transition-all disabled:opacity-50"
-          >
-            <RefreshCw className={`h-3.5 w-3.5 ${loading ? "animate-spin" : ""}`} />
-            Regenerate
-          </button>
+          <MotionButton>
+            <button
+              onClick={handleGenerate}
+              disabled={loading}
+              className="glass-button haptic-hover flex items-center gap-2 rounded-xl border border-white/10 px-4 py-2.5 text-[10px] font-black uppercase tracking-widest text-slate-400 transition-all hover:bg-white/10 hover:text-white disabled:opacity-50"
+            >
+              <RefreshCw className={cn("h-3.5 w-3.5", loading && "animate-spin")} />
+              Regenerate
+            </button>
+          </MotionButton>
         )}
       </div>
 
       {error && (
-        <div className="mb-4 flex items-start gap-2 rounded-lg bg-red-500/10 border border-red-500/20 p-3 text-xs text-red-400">
-          <AlertCircle className="h-4 w-4 shrink-0 mt-0.5" />
+        <div className="mb-6 flex items-start gap-3 rounded-2xl border border-red-500/20 bg-red-500/10 p-4 text-sm font-medium text-red-400">
+          <AlertCircle className="mt-0.5 h-5 w-5 shrink-0" />
           {error}
         </div>
       )}
 
       {!parsedSignals ? (
-        /* ── No Signals State ────────────────────────────────────── */
-        <div className="space-y-4">
-          <p className="text-xs text-zinc-500">
-            Extract business signals from public data and AI inference for{" "}
-            <span className="text-zinc-300 font-medium">{prospect?.company_name}</span>.
+        <div className="space-y-8">
+          <p className="max-w-xl text-sm font-medium leading-relaxed text-slate-400">
+            Extract business signals and market intelligence using real-time public data. 
+            Add custom context to sharpen the AI analysis.
           </p>
-          <div className="space-y-1.5">
-            <label className="text-xs font-medium text-zinc-400">
-              Raw Notes / News / Context{" "}
-              <span className="text-zinc-600">(optional)</span>
+          <div className="space-y-3">
+            <label className="font-headline text-[10px] font-black uppercase tracking-[0.2em] text-slate-500">
+              Additional Context <span className="opacity-40">(Optional)</span>
             </label>
             <textarea
-              className="w-full min-h-[80px] rounded-lg border border-white/10 bg-white/5 px-3 py-2 text-sm text-white placeholder:text-zinc-600 focus:outline-none focus:ring-1 focus:ring-indigo-500/50 resize-none"
-              placeholder="e.g. Recently raised $20M Series B, expanding payments team in UK…"
+              className="min-h-[120px] w-full rounded-2xl border border-white/8 bg-black/20 px-5 py-4 text-sm font-medium text-white placeholder:text-slate-600 focus:border-primary/50 focus:outline-none focus:ring-1 focus:ring-primary/30 transition-all resize-none shadow-inner"
+              placeholder="Enter funding news, recent hires, or specific pain points..."
               value={manualContext}
               onChange={(e) => setManualContext(e.target.value)}
             />
@@ -139,31 +152,36 @@ export default function SignalIntelligencePanel({ prospect, onSignalsGenerated }
           <button
             onClick={handleGenerate}
             disabled={loading || !prospect}
-            className="btn-pipeline haptic-hover w-full flex items-center justify-center gap-2 rounded-lg bg-indigo-600 hover:bg-indigo-500 text-white text-sm font-medium py-2 transition-all disabled:opacity-50"
+            className="btn-pipeline haptic-hover flex w-full items-center justify-center gap-3 rounded-[20px] bg-primary px-6 py-4 text-xs font-black uppercase tracking-[0.2em] text-on-primary shadow-xl shadow-primary/20 transition-all disabled:opacity-50"
           >
-            <Zap className={`h-4 w-4 ${loading ? "animate-pulse" : ""}`} />
-            {loading ? "Extracting Signals via Gemini…" : "Extract Market Signals"}
+            <Zap className={cn("h-4 w-4", loading && "animate-pulse")} />
+            {loading ? "Synthesizing Intelligence..." : "Synthesize Market Signals"}
           </button>
         </div>
       ) : (
-        /* ── Signals Populated State ─────────────────────────────── */
-        <div className="space-y-5">
-          {/* Signal Summary */}
-          <div className="rounded-lg bg-white/5 border border-white/10 p-4 space-y-1">
-            <p className="text-[10px] uppercase font-bold tracking-wider text-zinc-500 mb-2">Signal Summary</p>
-            <p className="text-sm text-zinc-200 leading-relaxed">{parsedSignals.signal_summary}</p>
+        <MotionGroup className="space-y-8">
+          {/* Executive Summary */}
+          <div className="space-y-3">
+            <p className="font-headline text-[9px] font-black uppercase tracking-[0.3em] text-slate-500">Executive Summary</p>
+            <div className="relative overflow-hidden rounded-[24px] border border-white/8 bg-white/[0.02] p-7 shadow-inner transition-all hover:bg-white/[0.04]">
+              <p className="relative z-10 text-[15px] font-medium leading-relaxed text-slate-200">
+                {parsedSignals.signal_summary}
+              </p>
+              <div className="absolute -right-20 -top-20 h-40 w-40 rounded-full bg-primary/5 blur-[80px]" />
+            </div>
           </div>
 
-          {/* Reason Tags */}
+          {/* Tags */}
           {(parsedSignals.reason_tags?.length ?? 0) > 0 && (
-            <div className="space-y-2">
-              <p className="text-[10px] uppercase font-bold tracking-wider text-zinc-500">Reason Tags</p>
-              <div className="flex flex-wrap gap-1.5">
-                {(parsedSignals.reason_tags ?? []).map((tag: string, i: number) => (
+            <div className="space-y-4">
+              <p className="font-headline text-[9px] font-black uppercase tracking-[0.3em] text-slate-500">Strategic Intent Indicators</p>
+              <div className="flex flex-wrap gap-2.5">
+                {parsedSignals.reason_tags?.map((tag, i) => (
                   <span
                     key={i}
-                    className="inline-flex items-center rounded-full border border-indigo-500/25 bg-indigo-500/10 px-2.5 py-0.5 text-[11px] font-medium text-indigo-300"
+                    className="inline-flex items-center rounded-xl border border-primary/20 bg-primary/10 px-4 py-2 text-[10px] font-black uppercase tracking-wider text-primary shadow-[0_0_20px_rgba(177,197,255,0.05)] transition-transform hover:scale-105"
                   >
+                    <span className="mr-2 h-1 w-1 rounded-full bg-primary" />
                     {tag}
                   </span>
                 ))}
@@ -173,46 +191,106 @@ export default function SignalIntelligencePanel({ prospect, onSignalsGenerated }
 
           {/* Raw Notes */}
           {parsedSignals.raw_notes && (
-            <div className="space-y-2">
-              <p className="text-[10px] uppercase font-bold tracking-wider text-zinc-500">Raw Notes</p>
-              <pre className="text-xs text-zinc-400 bg-white/5 border border-white/10 rounded-lg p-3 overflow-auto whitespace-pre-wrap leading-relaxed">
-                {parsedSignals.raw_notes}
-              </pre>
+            <div className="space-y-3">
+              <p className="font-headline text-[9px] font-black uppercase tracking-[0.3em] text-slate-500">Source Intelligence & Evidence</p>
+              <div className="relative group">
+                <pre className="thin-scrollbar max-h-48 overflow-auto whitespace-pre-wrap rounded-2xl border border-white/8 bg-black/40 p-5 font-mono-ui text-[11px] leading-relaxed text-slate-400 group-hover:text-slate-300 transition-colors">
+                  {parsedSignals.raw_notes}
+                </pre>
+                <div className="absolute inset-x-0 bottom-0 h-8 bg-gradient-to-t from-black/40 to-transparent pointer-events-none" />
+              </div>
             </div>
           )}
 
-          {/* Score Section */}
-          <div className="border-t border-white/10 pt-4">
+          {/* Lead Scoring Section */}
+          <div className="border-t border-white/8 pt-8">
             {!prospect.priority_score ? (
-              <button
-                className="btn-pipeline haptic-hover w-full flex items-center justify-center gap-2 rounded-lg bg-blue-600 hover:bg-blue-500 text-white text-sm font-medium py-2 transition-all disabled:opacity-50"
-                onClick={handleScore}
-                disabled={loading}
-              >
-                <ChevronRight className={`h-4 w-4 ${loading ? "animate-pulse" : ""}`} />
-                {loading ? "Calculating Score…" : "Calculate AI Lead Score"}
-              </button>
+              <div className="flex flex-col items-center justify-center rounded-[24px] border border-dashed border-white/10 bg-white/[0.01] p-10 text-center">
+                 <p className="mb-6 text-sm font-medium text-slate-500">Calculate AI priority score based on signal strength and ideal customer profile fit.</p>
+                 <button
+                    className="btn-pipeline haptic-hover flex min-w-[280px] items-center justify-center gap-3 rounded-[20px] bg-secondary px-8 py-4 text-xs font-black uppercase tracking-[0.2em] text-on-secondary shadow-xl shadow-secondary/20 transition-all disabled:opacity-50"
+                    onClick={handleScore}
+                    disabled={loading}
+                  >
+                    <ChevronRight className={cn("h-4 w-4", loading && "animate-pulse")} />
+                    {loading ? "Calculating Lead Score..." : "Generate AI Lead Score"}
+                  </button>
+              </div>
             ) : (
-              <div className="rounded-lg bg-blue-500/10 border border-blue-500/20 p-4 space-y-3">
-                <p className="text-[10px] uppercase font-bold tracking-wider text-blue-400">Score Justification</p>
-                <p className="text-xs text-blue-200 leading-relaxed whitespace-pre-wrap">
-                  {prospect.score_explanation}
-                </p>
-                <div className="grid grid-cols-2 gap-2 pt-1">
-                  <div className="rounded-md bg-white/5 border border-white/5 px-3 py-2">
-                    <p className="text-[10px] text-zinc-500 uppercase tracking-wider">Fit Score</p>
-                    <p className="text-sm font-bold text-white mt-0.5">{prospect.fit_score}<span className="text-zinc-500 text-xs">/100</span></p>
+              <div className="space-y-8">
+                <div className="flex flex-wrap items-end justify-between gap-6">
+                  <div>
+                    <p className="mb-4 font-headline text-[9px] font-black uppercase tracking-[0.3em] text-slate-500">Prioritization Matrix</p>
+                    <div className="flex items-center gap-6">
+                       <div className="relative flex h-20 w-20 items-center justify-center">
+                          <svg className="absolute inset-0 h-full w-full rotate-[-90deg]">
+                             <circle cx="40" cy="40" r="36" fill="transparent" stroke="currentColor" strokeWidth="6" className="text-white/5" />
+                             <circle 
+                                cx="40" 
+                                cy="40" 
+                                r="36" 
+                                fill="transparent" 
+                                stroke="currentColor" 
+                                strokeWidth="6" 
+                                strokeDasharray={226.2}
+                                strokeDashoffset={226.2 - (226.2 * (prospect.priority_score ?? 0)) / 100}
+                                className="text-secondary shadow-[0_0_15px_#4adea3] transition-all duration-1000" 
+                                strokeLinecap="round"
+                             />
+                          </svg>
+                          <span className="font-mono-ui text-2xl font-black text-white">{(prospect.priority_score ?? 0).toFixed(0)}</span>
+                       </div>
+                       <div>
+                          <span className="text-[10px] font-black uppercase tracking-widest text-slate-500">Priority Score</span>
+                          <h4 className="font-headline text-xl font-black tracking-tight text-white">High Potential Lead</h4>
+                       </div>
+                    </div>
                   </div>
-                  <div className="rounded-md bg-white/5 border border-white/5 px-3 py-2">
-                    <p className="text-[10px] text-zinc-500 uppercase tracking-wider">Intent Score</p>
-                    <p className="text-sm font-bold text-white mt-0.5">{prospect.intent_score}<span className="text-zinc-500 text-xs">/100</span></p>
+                  
+                  <div className="grid w-full grid-cols-2 gap-4 lg:w-auto lg:min-w-[400px]">
+                    <div className="rounded-2xl border border-white/8 bg-white/4 p-4 transition-all hover:bg-white/[0.06]">
+                      <div className="mb-2 flex items-center justify-between">
+                        <p className="text-[9px] font-black uppercase tracking-widest text-slate-500">Ideal Fit</p>
+                        <span className="font-mono-ui text-xs font-black text-white">{prospect.fit_score}/100</span>
+                      </div>
+                      <div className="h-1.5 w-full overflow-hidden rounded-full bg-white/5 shadow-inner">
+                        <div 
+                          className="h-full bg-primary shadow-[0_0_10px_rgba(177,197,255,0.4)] transition-all duration-1000" 
+                          style={{ width: `${prospect.fit_score}%` }} 
+                        />
+                      </div>
+                    </div>
+                    <div className="rounded-2xl border border-white/8 bg-white/4 p-4 transition-all hover:bg-white/[0.06]">
+                      <div className="mb-2 flex items-center justify-between">
+                        <p className="text-[9px] font-black uppercase tracking-widest text-slate-500">Intent Signal</p>
+                        <span className="font-mono-ui text-xs font-black text-white">{prospect.intent_score}/100</span>
+                      </div>
+                      <div className="h-1.5 w-full overflow-hidden rounded-full bg-white/5 shadow-inner">
+                        <div 
+                          className="h-full bg-secondary shadow-[0_0_10px_rgba(78,222,163,0.4)] transition-all duration-1000" 
+                          style={{ width: `${prospect.intent_score}%` }} 
+                        />
+                      </div>
+                    </div>
                   </div>
+                </div>
+
+                <div className="relative overflow-hidden rounded-[28px] border border-secondary/20 bg-secondary/[0.03] p-7 shadow-inner">
+                   <div className="relative z-10">
+                     <p className="mb-3 font-headline text-[9px] font-black uppercase tracking-[0.2em] text-secondary">AI Strategic Justification</p>
+                     <p className="text-[14px] font-medium leading-relaxed text-slate-200">
+                       {prospect.score_explanation}
+                     </p>
+                   </div>
+                   <div className="absolute left-0 top-0 h-full w-1 bg-secondary/30" />
+                   <div className="absolute -right-10 -bottom-10 h-32 w-32 rounded-full bg-secondary/5 blur-[60px]" />
                 </div>
               </div>
             )}
           </div>
-        </div>
+        </MotionGroup>
       )}
-    </div>
+    </MotionCard>
   );
 }
+
