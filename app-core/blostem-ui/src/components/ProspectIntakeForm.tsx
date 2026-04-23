@@ -1,12 +1,12 @@
 "use client";
 
 import { useState } from "react";
-import { Card, CardHeader, CardTitle, CardContent, CardDescription, CardFooter } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { Label } from "@/components/ui/label";
-import { AlertCircle } from "lucide-react";
+import { AlertCircle, Plus } from "lucide-react";
 import { fetchWithAuth } from "@/lib/api";
+import { MotionGroup } from "./motion/BlostemMotion";
 
 export default function ProspectIntakeForm({ onProspectAdded }: { onProspectAdded?: () => void }) {
   const [loading, setLoading] = useState(false);
@@ -43,69 +43,76 @@ export default function ProspectIntakeForm({ onProspectAdded }: { onProspectAdde
   };
 
   return (
-    <Card className="w-full border-white/10 bg-transparent shadow-none">
-      <CardHeader className="px-0 pt-0">
-        <CardTitle className="text-sm text-white">Manual Intake</CardTitle>
-        <CardDescription className="text-xs text-zinc-500">Add a single enterprise prospect.</CardDescription>
-      </CardHeader>
+    <div className="space-y-4">
       {error && (
-        <div className="flex items-start gap-2 rounded-lg bg-red-500/10 border border-red-500/20 p-3 mb-3 text-xs text-red-400">
-          <AlertCircle className="h-4 w-4 shrink-0 mt-0.5" />
+        <div className="flex items-start gap-2 rounded-xl bg-red-500/10 border border-red-500/20 p-3 text-[10px] text-red-400 animate-in fade-in zoom-in duration-200">
+          <AlertCircle className="h-3.5 w-3.5 shrink-0" />
           {error}
         </div>
       )}
-      <form onSubmit={handleSubmit}>
-        <CardContent className="space-y-3 px-0">
+      
+      <form onSubmit={handleSubmit} className="space-y-4">
+        <MotionGroup className="grid gap-4">
           <div className="space-y-1.5">
-            <Label htmlFor="company_name" className="text-xs text-zinc-400">Company Name *</Label>
+            <Label htmlFor="company_name" className="text-[10px] font-black uppercase tracking-widest text-slate-500">Company Name *</Label>
             <Input
               id="company_name"
               placeholder="e.g. Acme Corp"
               required
               value={formData.company_name}
               onChange={(e) => setFormData({ ...formData, company_name: e.target.value })}
-              className="bg-white/5 border-white/10 text-white placeholder:text-zinc-600 text-sm h-8"
+              className="bg-white/4 border-white/5 text-white placeholder:text-slate-700 text-xs h-10 rounded-xl focus:border-primary/50 focus:ring-0 transition-all"
             />
           </div>
+
           <div className="space-y-1.5">
-            <Label htmlFor="website" className="text-xs text-zinc-400">Website</Label>
+            <Label htmlFor="website" className="text-[10px] font-black uppercase tracking-widest text-slate-500">Website</Label>
             <Input
               id="website"
               placeholder="acme.com"
               value={formData.website}
               onChange={(e) => setFormData({ ...formData, website: e.target.value })}
-              className="bg-white/5 border-white/10 text-white placeholder:text-zinc-600 text-sm h-8"
+              className="bg-white/4 border-white/5 text-white placeholder:text-slate-700 text-xs h-10 rounded-xl focus:border-primary/50 focus:ring-0 transition-all"
             />
           </div>
-          <div className="grid grid-cols-2 gap-3">
+
+          <div className="grid grid-cols-2 gap-4">
             <div className="space-y-1.5">
-              <Label htmlFor="industry" className="text-xs text-zinc-400">Industry</Label>
+              <Label htmlFor="industry" className="text-[10px] font-black uppercase tracking-widest text-slate-500">Industry</Label>
               <Input
                 id="industry"
                 placeholder="Fintech"
                 value={formData.industry}
                 onChange={(e) => setFormData({ ...formData, industry: e.target.value })}
-                className="bg-white/5 border-white/10 text-white placeholder:text-zinc-600 text-sm h-8"
+                className="bg-white/4 border-white/5 text-white placeholder:text-slate-700 text-xs h-10 rounded-xl focus:border-primary/50 focus:ring-0 transition-all"
               />
             </div>
             <div className="space-y-1.5">
-              <Label htmlFor="size" className="text-xs text-zinc-400">Team Size</Label>
+              <Label htmlFor="size" className="text-[10px] font-black uppercase tracking-widest text-slate-500">Size</Label>
               <Input
                 id="size"
                 placeholder="500-1000"
                 value={formData.size}
                 onChange={(e) => setFormData({ ...formData, size: e.target.value })}
-                className="bg-white/5 border-white/10 text-white placeholder:text-zinc-600 text-sm h-8"
+                className="bg-white/4 border-white/5 text-white placeholder:text-slate-700 text-xs h-10 rounded-xl focus:border-primary/50 focus:ring-0 transition-all"
               />
             </div>
           </div>
-        </CardContent>
-        <CardFooter className="px-0 pb-0">
-          <Button type="submit" disabled={loading} className="w-full bg-indigo-600 hover:bg-indigo-500 text-white h-8 text-xs">
-            {loading ? "Adding..." : "Add Prospect"}
-          </Button>
-        </CardFooter>
+        </MotionGroup>
+
+        <Button 
+          type="submit" 
+          disabled={loading} 
+          className="w-full bg-primary hover:bg-primary/90 text-white h-11 text-[10px] font-black uppercase tracking-[0.2em] rounded-xl shadow-lg shadow-primary/20 transition-all active:scale-[0.98]"
+        >
+          {loading ? "Injecting..." : (
+            <>
+              <Plus className="h-3.5 w-3.5 mr-2" />
+              Incorporate Prospect
+            </>
+          )}
+        </Button>
       </form>
-    </Card>
+    </div>
   );
 }

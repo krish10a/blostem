@@ -24,6 +24,36 @@ router = APIRouter(
 # to prevent FastAPI matching "export" as a prospect_id.
 # ─────────────────────────────────────────────────────────────────────────────
 
+@router.get("/download-sample-csv")
+def download_sample_csv():
+    """Download a template CSV for prospect upload."""
+    import os
+    # Path is relative to the backend root or use absolute
+    file_path = os.path.join(os.path.dirname(os.path.dirname(__file__)), "sample_data", "demo_prospects.csv")
+    
+    if not os.path.exists(file_path):
+        # Fallback if file missing - generate on the fly
+        output = io.StringIO()
+        writer = csv.writer(output)
+        writer.writerow(["company_name", "website", "industry", "size"])
+        writer.writerow(["Acme Corp", "acme.com", "Fintech", "500-1000"])
+        writer.writerow(["Global Tech", "globaltech.io", "SaaS", "100-500"])
+        csv_bytes = output.getvalue().encode("utf-8")
+        return StreamingResponse(
+            io.BytesIO(csv_bytes),
+            media_type="text/csv",
+            headers={"Content-Disposition": 'attachment; filename="blostem_template.csv"'}
+        )
+    
+    with open(file_path, "rb") as f:
+        csv_bytes = f.read()
+    
+    return StreamingResponse(
+        io.BytesIO(csv_bytes),
+        media_type="text/csv",
+        headers={"Content-Disposition": 'attachment; filename="blostem_template.csv"'}
+    )
+
 # ── MODULE 10: Export ────────────────────────────────────────────────────────
 
 def generate_prospect_xlsx(prospects: List[models.Prospect]):

@@ -1,11 +1,10 @@
 "use client";
 
 import { useState } from "react";
-import { Card, CardHeader, CardTitle, CardContent, CardDescription, CardFooter } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { Label } from "@/components/ui/label";
-import { AlertCircle } from "lucide-react";
+import { AlertCircle, CheckCircle2, Upload } from "lucide-react";
 import { fetchWithAuth } from "@/lib/api";
 
 export default function ProspectCSVUpload({ onProspectAdded }: { onProspectAdded?: () => void }) {
@@ -45,28 +44,34 @@ export default function ProspectCSVUpload({ onProspectAdded }: { onProspectAdded
   };
 
   return (
-    <Card className="w-full border-white/10 bg-transparent shadow-none">
-      <CardHeader className="px-0 pt-0">
-        <CardTitle className="text-sm text-white">Bulk CSV Upload</CardTitle>
-        <CardDescription className="text-xs text-zinc-500">
-          Columns: <code className="text-zinc-400">company_name</code>, website, industry, size
-        </CardDescription>
-      </CardHeader>
-      <CardContent className="px-0">
-        {error && (
-          <div className="flex items-start gap-2 rounded-lg bg-red-500/10 border border-red-500/20 p-3 mb-3 text-xs text-red-400">
-            <AlertCircle className="h-4 w-4 shrink-0 mt-0.5" />
-            {error}
-          </div>
-        )}
-        {result && (
-          <div className="rounded-lg bg-emerald-500/10 border border-emerald-500/20 p-3 mb-3 text-xs text-emerald-400">
-            ✓ Added {result.added} prospect(s).
-            {result.skipped_rows > 0 && ` Skipped ${result.skipped_rows} row(s) with no company name.`}
-          </div>
-        )}
-        <div className="space-y-1.5">
-          <Label htmlFor="csv_upload" className="text-xs text-zinc-400">Select CSV File</Label>
+    <div className="space-y-4">
+      <div className="rounded-xl bg-white/[0.02] border border-white/5 p-4">
+        <p className="text-[10px] font-medium leading-relaxed text-slate-500">
+          Bulk-ingest prospects via CSV. Required columns: <code className="text-secondary font-black">company_name</code>. 
+          Optional: website, industry, size.
+        </p>
+      </div>
+
+      {error && (
+        <div className="flex items-start gap-2 rounded-xl bg-red-500/10 border border-red-500/20 p-3 text-[10px] text-red-400 animate-in fade-in zoom-in duration-200">
+          <AlertCircle className="h-3.5 w-3.5 shrink-0" />
+          {error}
+        </div>
+      )}
+
+      {result && (
+        <div className="flex items-center gap-2 rounded-xl bg-emerald-500/10 border border-emerald-500/20 p-3 text-[10px] text-emerald-400 animate-in fade-in zoom-in duration-200">
+          <CheckCircle2 className="h-3.5 w-3.5 shrink-0" />
+          <span>
+            Successfully added {result.added} prospect(s).
+            {result.skipped_rows > 0 && ` (${result.skipped_rows} skipped)`}
+          </span>
+        </div>
+      )}
+
+      <div className="space-y-1.5">
+        <Label htmlFor="csv_upload" className="text-[10px] font-black uppercase tracking-widest text-slate-500">Source CSV</Label>
+        <div className="relative">
           <Input
             id="csv_upload"
             type="file"
@@ -75,20 +80,23 @@ export default function ProspectCSVUpload({ onProspectAdded }: { onProspectAdded
               setFile(e.target.files?.[0] || null);
               setResult(null);
             }}
-            className="bg-white/5 border-white/10 text-zinc-300 text-xs h-8 file:text-zinc-400 file:bg-transparent file:border-0"
+            className="bg-white/4 border-white/5 text-slate-300 text-xs h-12 rounded-xl file:mr-4 file:py-1 file:px-3 file:rounded-full file:border-0 file:text-[10px] file:font-black file:bg-primary file:text-white hover:file:bg-primary/80 transition-all cursor-pointer"
           />
         </div>
-      </CardContent>
-      <CardFooter className="px-0 pb-0">
-        <Button
-          onClick={handleUpload}
-          disabled={!file || loading}
-          variant="secondary"
-          className="w-full bg-white/10 hover:bg-white/20 text-white border-white/10 h-8 text-xs"
-        >
-          {loading ? "Processing..." : "Upload CSV"}
-        </Button>
-      </CardFooter>
-    </Card>
+      </div>
+
+      <Button
+        onClick={handleUpload}
+        disabled={!file || loading}
+        className="w-full bg-secondary hover:bg-secondary/90 text-white h-11 text-[10px] font-black uppercase tracking-[0.2em] rounded-xl shadow-lg shadow-secondary/20 transition-all active:scale-[0.98]"
+      >
+        {loading ? "Processing Stream..." : (
+          <>
+            <Upload className="h-3.5 w-3.5 mr-2" />
+            Upload CSV
+          </>
+        )}
+      </Button>
+    </div>
   );
 }
