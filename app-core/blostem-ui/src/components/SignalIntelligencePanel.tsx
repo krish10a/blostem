@@ -4,7 +4,7 @@ import { useState } from "react";
 import { Zap, AlertCircle, RefreshCw, ChevronRight } from "lucide-react";
 import { fetchWithAuth } from "@/lib/api";
 import { cn } from "@/lib/utils";
-import { MotionCard, MotionButton } from "@/components/motion/BlostemMotion";
+import { MotionCard, MotionButton, MotionGroup, MotionItem } from "@/components/motion/BlostemMotion";
 
 type SignalsPayload = {
   signal_summary?: string;
@@ -161,7 +161,7 @@ export default function SignalIntelligencePanel({ prospect, onSignalsGenerated }
       ) : (
         <MotionGroup className="space-y-8">
           {/* Executive Summary */}
-          <div className="space-y-3">
+          <MotionItem className="space-y-3">
             <p className="font-headline text-[9px] font-black uppercase tracking-[0.3em] text-slate-500">Executive Summary</p>
             <div className="relative overflow-hidden rounded-[24px] border border-white/8 bg-white/[0.02] p-7 shadow-inner transition-all hover:bg-white/[0.04]">
               <p className="relative z-10 text-[15px] font-medium leading-relaxed text-slate-200">
@@ -169,11 +169,11 @@ export default function SignalIntelligencePanel({ prospect, onSignalsGenerated }
               </p>
               <div className="absolute -right-20 -top-20 h-40 w-40 rounded-full bg-primary/5 blur-[80px]" />
             </div>
-          </div>
+          </MotionItem>
 
           {/* Tags */}
           {(parsedSignals.reason_tags?.length ?? 0) > 0 && (
-            <div className="space-y-4">
+            <MotionItem className="space-y-4">
               <p className="font-headline text-[9px] font-black uppercase tracking-[0.3em] text-slate-500">Strategic Intent Indicators</p>
               <div className="flex flex-wrap gap-2.5">
                 {parsedSignals.reason_tags?.map((tag, i) => (
@@ -186,12 +186,12 @@ export default function SignalIntelligencePanel({ prospect, onSignalsGenerated }
                   </span>
                 ))}
               </div>
-            </div>
+            </MotionItem>
           )}
 
           {/* Raw Notes */}
           {parsedSignals.raw_notes && (
-            <div className="space-y-3">
+            <MotionItem className="space-y-3">
               <p className="font-headline text-[9px] font-black uppercase tracking-[0.3em] text-slate-500">Source Intelligence & Evidence</p>
               <div className="relative group">
                 <pre className="thin-scrollbar max-h-48 overflow-auto whitespace-pre-wrap rounded-2xl border border-white/8 bg-black/40 p-5 font-mono-ui text-[11px] leading-relaxed text-slate-400 group-hover:text-slate-300 transition-colors">
@@ -199,11 +199,11 @@ export default function SignalIntelligencePanel({ prospect, onSignalsGenerated }
                 </pre>
                 <div className="absolute inset-x-0 bottom-0 h-8 bg-gradient-to-t from-black/40 to-transparent pointer-events-none" />
               </div>
-            </div>
+            </MotionItem>
           )}
 
           {/* Lead Scoring Section */}
-          <div className="border-t border-white/8 pt-8">
+          <MotionItem className="border-t border-white/8 pt-8">
             {!prospect.priority_score ? (
               <div className="flex flex-col items-center justify-center rounded-[24px] border border-dashed border-white/10 bg-white/[0.01] p-10 text-center">
                  <p className="mb-6 text-sm font-medium text-slate-500">Calculate AI priority score based on signal strength and ideal customer profile fit.</p>
@@ -287,7 +287,7 @@ export default function SignalIntelligencePanel({ prospect, onSignalsGenerated }
                 </div>
               </div>
             )}
-          </div>
+          </MotionItem>
         </MotionGroup>
       )}
     </MotionCard>
