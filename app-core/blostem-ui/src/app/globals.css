@@ -430,6 +430,9 @@
     animation: blostem-fade-up 0.8s cubic-bezier(0.16, 1, 0.3, 1) forwards;
     opacity: 0;
   }
+  .animate-progress-infinite {
+    animation: blostem-progress-infinite 2s linear infinite;
+  }
   .card-hover {
     transition: all 0.4s cubic-bezier(0.16, 1, 0.3, 1);
   }
@@ -465,7 +468,8 @@
     .mesh-blob-drift-slow,
     .mesh-blob-drift-fast,
     .btn-pipeline,
-    .hover-pulse:hover {
+    .hover-pulse:hover,
+    .animate-progress-infinite {
       animation: none !important;
     }
     .route-crossfade {
@@ -643,5 +647,14 @@
   }
   50% {
     transform: translate3d(0, -10px, 0);
+  }
+}
+
+@keyframes blostem-progress-infinite {
+  0% {
+    transform: translateX(-100%);
+  }
+  100% {
+    transform: translateX(100%);
   }
 }

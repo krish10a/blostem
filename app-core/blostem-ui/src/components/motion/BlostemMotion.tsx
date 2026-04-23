@@ -1,7 +1,8 @@
 "use client";
 
 import { ReactNode } from "react";
-import { motion, useReducedMotion, type Variants } from "motion/react";
+import * as m from "motion/react-m";
+import { useReducedMotion, type Variants } from "motion/react";
 import { cn } from "@/lib/utils";
 
 const ease: [number, number, number, number] = [0.16, 1, 0.3, 1];
@@ -17,14 +18,13 @@ export const staggerContainer: Variants = {
 };
 
 export const fadeUpItem: Variants = {
-  hidden: { opacity: 0, y: 28, scale: 0.985, filter: "blur(10px)" },
+  hidden: { opacity: 0, y: 20, scale: 0.98 },
   visible: {
     opacity: 1,
     y: 0,
     scale: 1,
-    filter: "blur(0px)",
     transition: {
-      duration: 0.72,
+      duration: 0.5,
       ease,
     },
   },
@@ -48,8 +48,8 @@ export function MotionSection({
   const reduceMotion = useReducedMotion();
 
   return (
-    <motion.div
-      className={className}
+    <m.div
+      className={cn("will-change-transform transform-gpu", className)}
       initial={reduceMotion ? undefined : "hidden"}
       whileInView={reduceMotion ? undefined : "visible"}
       viewport={reduceMotion ? undefined : { once, amount }}
@@ -57,7 +57,7 @@ export function MotionSection({
       transition={reduceMotion ? undefined : { delay }}
     >
       {children}
-    </motion.div>
+    </m.div>
   );
 }
 
@@ -73,8 +73,8 @@ export function MotionGroup({
   const reduceMotion = useReducedMotion();
 
   return (
-    <motion.div
-      className={className}
+    <m.div
+      className={cn("will-change-transform transform-gpu", className)}
       initial={reduceMotion ? undefined : "hidden"}
       whileInView={reduceMotion ? undefined : "visible"}
       viewport={reduceMotion ? undefined : { once: true, amount: 0.12 }}
@@ -82,7 +82,7 @@ export function MotionGroup({
       transition={reduceMotion ? undefined : { delayChildren: delay }}
     >
       {children}
-    </motion.div>
+    </m.div>
   );
 }
 
@@ -98,13 +98,13 @@ export function MotionItem({
   const reduceMotion = useReducedMotion();
 
   return (
-    <motion.div
-      className={className}
+    <m.div
+      className={cn("will-change-transform transform-gpu", className)}
       variants={reduceMotion ? undefined : fadeUpItem}
       transition={reduceMotion ? undefined : { delay }}
     >
       {children}
-    </motion.div>
+    </m.div>
   );
 }
 
@@ -117,8 +117,8 @@ export function MotionCard({
   const reduceMotion = useReducedMotion();
 
   return (
-    <motion.div
-      className={cn("transform-gpu", className)}
+    <m.div
+      className={cn("transform-gpu will-change-transform", className)}
       initial={reduceMotion ? undefined : "hidden"}
       whileInView={reduceMotion ? undefined : "visible"}
       viewport={reduceMotion ? undefined : { once: true, amount: 0.12 }}
@@ -128,15 +128,15 @@ export function MotionCard({
         reduceMotion || !hover
           ? undefined
           : {
-              y: -10,
-              scale: 1.012,
-              transition: { duration: 0.28, ease },
+              y: -8,
+              scale: 1.01,
+              transition: { duration: 0.25, ease },
             }
       }
-      whileTap={reduceMotion || !hover ? undefined : { scale: 0.992 }}
+      whileTap={reduceMotion || !hover ? undefined : { scale: 0.995 }}
     >
       {children}
-    </motion.div>
+    </m.div>
   );
 }
 
@@ -148,16 +148,16 @@ export function MotionButton({
   const reduceMotion = useReducedMotion();
 
   return (
-    <motion.div
-      className={className}
-      initial={reduceMotion ? undefined : { opacity: 0, y: 20 }}
+    <m.div
+      className={cn("will-change-transform transform-gpu", className)}
+      initial={reduceMotion ? undefined : { opacity: 0, y: 15 }}
       animate={reduceMotion ? undefined : { opacity: 1, y: 0 }}
-      transition={reduceMotion ? undefined : { duration: 0.65, delay, ease }}
-      whileHover={reduceMotion ? undefined : { y: -4, scale: 1.02 }}
+      transition={reduceMotion ? undefined : { duration: 0.5, delay, ease }}
+      whileHover={reduceMotion ? undefined : { y: -2, scale: 1.02 }}
       whileTap={reduceMotion ? undefined : { scale: 0.98 }}
     >
       {children}
-    </motion.div>
+    </m.div>
   );
 }
 
@@ -173,15 +173,15 @@ export function FloatingOrb({
   const reduceMotion = useReducedMotion();
 
   return (
-    <motion.div
-      className={className}
+    <m.div
+      className={cn("transform-gpu will-change-transform", className)}
       animate={
         reduceMotion
           ? undefined
           : {
               x: [0, 26, -18, 0],
               y: [0, -32, 22, 0],
-              scale: [1, 1.08, 0.96, 1],
+              scale: [1, 1.05, 0.98, 1],
             }
       }
       transition={

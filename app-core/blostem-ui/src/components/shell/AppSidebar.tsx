@@ -3,7 +3,8 @@
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { X } from "lucide-react";
-import { motion, useReducedMotion } from "motion/react";
+import * as m from "motion/react-m";
+import { useReducedMotion } from "motion/react";
 import { MaterialIcon } from "./MaterialIcon";
 import { cn } from "@/lib/utils";
 import { createClient } from "@/lib/supabase";
@@ -107,7 +108,7 @@ export function AppSidebar({
 
   return (
     <>
-      <motion.button
+      <m.button
         type="button"
         aria-label="Close navigation"
         onClick={onClose}
@@ -116,16 +117,16 @@ export function AppSidebar({
           isOpen ? "opacity-100" : "pointer-events-none opacity-0"
         )}
         animate={reduceMotion ? undefined : { opacity: isOpen ? 1 : 0 }}
-        transition={reduceMotion ? undefined : { duration: 0.28 }}
+        transition={reduceMotion ? undefined : { duration: 0.2 }}
       />
 
-      <motion.nav
+      <m.nav
         className={cn(
-          "glass-nav fixed inset-y-3 left-3 z-50 flex w-[18.75rem] flex-col overflow-hidden rounded-[28px] p-4 transition-transform duration-300 lg:inset-y-4 lg:left-4",
+          "glass-nav fixed inset-y-3 left-3 z-50 flex w-[18.75rem] flex-col overflow-hidden rounded-[28px] p-4 transition-transform duration-300 lg:inset-y-4 lg:left-4 will-change-transform transform-gpu",
           isOpen ? "translate-x-0" : "-translate-x-[calc(100%+1rem)] lg:translate-x-0",
           pathname?.includes("/pipeline") && "inset-y-0 left-0 rounded-none border-r border-white/5 bg-slate-950 lg:inset-y-0 lg:left-0"
         )}
-        initial={reduceMotion ? undefined : { opacity: 0, x: -28, scale: 0.98 }}
+        initial={reduceMotion ? undefined : { opacity: 0, x: -20, scale: 0.99 }}
         animate={
           reduceMotion
             ? undefined
@@ -135,7 +136,7 @@ export function AppSidebar({
                 scale: 1,
               }
         }
-        transition={reduceMotion ? undefined : { duration: 0.55, ease: [0.16, 1, 0.3, 1] }}
+        transition={reduceMotion ? undefined : { duration: 0.4, ease: [0.16, 1, 0.3, 1] }}
       >
         <div className="mb-6 flex items-start justify-between gap-3 px-2 pt-1">
           <div className="flex items-center gap-3">
@@ -301,7 +302,7 @@ export function AppSidebar({
             )}
           </div>
         </div>
-      </motion.nav>
+      </m.nav>
     </>
   );
 }

@@ -2,7 +2,8 @@
 
 import Link from "next/link";
 import { usePathname } from "next/navigation";
-import { motion, useReducedMotion } from "motion/react";
+import * as m from "motion/react-m";
+import { useReducedMotion } from "motion/react";
 import { MaterialIcon } from "./MaterialIcon";
 import { cn } from "@/lib/utils";
 
@@ -47,9 +48,9 @@ export function AppTopBar({ onMenuToggle }: { onMenuToggle: () => void }) {
   };
 
   return (
-    <motion.header
+    <m.header
       className={cn(
-        "glass-nav sticky top-3 z-30 rounded-[28px] px-4 py-4 sm:px-5 lg:top-4 lg:px-6",
+        "glass-nav sticky top-3 z-30 rounded-[28px] px-4 py-4 sm:px-5 lg:top-4 lg:px-6 will-change-transform transform-gpu",
         pathname?.includes("/pipeline") && "top-0 rounded-none border-b border-white/5 bg-slate-950/80 backdrop-blur-md lg:top-0"
       )}
       initial={reduceMotion ? undefined : { opacity: 0, y: -18 }}
@@ -114,6 +115,6 @@ export function AppTopBar({ onMenuToggle }: { onMenuToggle: () => void }) {
           </div>
         </div>
       </div>
-    </motion.header>
+    </m.header>
   );
 }

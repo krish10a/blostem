@@ -21,6 +21,8 @@ export const metadata: Metadata = {
   description: "Operational Intelligence for prospect pipelines.",
 };
 
+import { LazyMotion, domAnimation } from "motion/react";
+
 export default function RootLayout({
   children,
 }: Readonly<{
@@ -40,7 +42,9 @@ export default function RootLayout({
       </head>
       <body className="min-h-full flex flex-col" suppressHydrationWarning>
         <StitchMotionRuntime />
-        {children}
+        <LazyMotion features={domAnimation}>
+          {children}
+        </LazyMotion>
       </body>
     </html>
   );

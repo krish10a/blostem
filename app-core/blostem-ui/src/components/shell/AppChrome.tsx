@@ -2,7 +2,8 @@
 
 import { ReactNode, Suspense, useEffect, useState } from "react";
 import { usePathname } from "next/navigation";
-import { motion, useReducedMotion } from "motion/react";
+import { LazyMotion, domAnimation, useReducedMotion } from "motion/react";
+import * as m from "motion/react-m";
 import { AppSidebar } from "@/components/shell/AppSidebar";
 import { AppTopBar } from "@/components/shell/AppTopBar";
 import { cn } from "@/lib/utils";
@@ -24,11 +25,11 @@ export function AppChrome({ children }: { children: ReactNode }) {
   const isPipeline = pathname?.includes("/pipeline");
 
   return (
-    <motion.div
-      className="relative z-10 min-h-screen"
+    <m.div
+      className="relative z-10 min-h-screen will-change-[opacity]"
       initial={reduceMotion ? undefined : { opacity: 0 }}
       animate={reduceMotion ? undefined : { opacity: 1 }}
-      transition={reduceMotion ? undefined : { duration: 0.45 }}
+      transition={reduceMotion ? undefined : { duration: 0.3 }}
     >
       <Suspense fallback={null}>
         <AppSidebar isOpen={sidebarOpen} onClose={() => setSidebarOpen(false)} />
@@ -46,6 +47,6 @@ export function AppChrome({ children }: { children: ReactNode }) {
           <div className={cn("mx-auto max-w-[1560px]", isPipeline && "max-w-none")}>{children}</div>
         </main>
       </div>
-    </motion.div>
+    </m.div>
   );
 }

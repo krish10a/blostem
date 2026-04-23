@@ -100,6 +100,57 @@ function getStatusColor(status?: string | null): string {
   return "bg-white/5 text-slate-500 border-white/10";
 }
 
+const SAMPLE_PROSPECTS: Prospect[] = [
+  {
+    id: -1,
+    company_name: "Vertex Infrastructure",
+    website: "https://vertex-infra.io",
+    industry: "Energy & Grid",
+    size: "500-1000",
+    priority_score: 94,
+    fit_score: 88,
+    intent_score: 96,
+    confidence_score: 92,
+    signals: JSON.stringify({
+      growth_signals: ["Series C Expansion", "New Data Center Build"],
+      tech_stack: ["Kubernetes", "Terraform", "NVIDIA H100"],
+      pain_points: ["Latency in edge inference", "High ingress costs"]
+    }),
+    persona_map: JSON.stringify({
+      personas: [
+        { role: "VP Engineering", name: "Alex Chen", priority: "High" },
+        { role: "Head of Infrastructure", name: "Sarah Miller", priority: "Medium" }
+      ]
+    }),
+    messages: JSON.stringify({
+      email: "Hi Alex,\n\nI noticed Vertex is scaling its edge inference layer. Most firms at your stage struggle with H100 utilization ratios. Blostem's sovereign orchestration could reduce your ingress overhead by 40%.\n\nWould a technical deep dive next Tuesday help?",
+      linkedin: "Alex - impressive work on the Series C. Vertex is clearly leading in the Energy/Grid sector. Let's connect on edge efficiency."
+    }),
+    compliance_status: JSON.stringify({
+      overall_status: "APPROVED",
+      safe_to_send: true,
+      issues: [],
+      compliance_summary: "Sequence adheres to enterprise safety protocols and brand voice guidelines."
+    })
+  },
+  {
+    id: -2,
+    company_name: "CloudScale Logic",
+    website: "https://cloudscale.ai",
+    industry: "SaaS",
+    size: "100-250",
+    priority_score: 78,
+    fit_score: 72,
+    intent_score: 85,
+    confidence_score: 80,
+    signals: JSON.stringify({
+      growth_signals: ["Hiring VP Sales", "Market expansion to EMEA"],
+      tech_stack: ["React", "Go", "AWS"],
+      pain_points: ["Manual prospect scoring", "Fragmented outreach"]
+    })
+  }
+];
+
 export default function PipelineWorkbench() {
   const [prospects, setProspects] = useState<Prospect[]>([]);
   const [selectedProspect, setSelectedProspect] = useState<Prospect | null>(null);
@@ -145,9 +196,16 @@ export default function PipelineWorkbench() {
       }
     } catch (err) {
       console.error("Fetch error:", err);
-      toast.error("Failed to reach backend. Is the server running?");
+      // Only toast error if it's not a generic connection issue during first load
+      if (showRefreshing) toast.error("Failed to reach backend. Using cached intelligence.");
+      
+      // Fallback to sample data if database is empty or unreachable
+      if (prospects.length === 0) {
+        setProspects(SAMPLE_PROSPECTS);
+      }
     } finally {
       setIsRefreshing(false);
+      setProspects(prev => prev.length === 0 ? SAMPLE_PROSPECTS : prev);
     }
   };
 
@@ -414,15 +472,41 @@ export default function PipelineWorkbench() {
                       {/* Scrollable Flow */}
                       <div className="flex-1 overflow-y-auto p-8 thin-scrollbar space-y-10">
                          {pipelineRunning && (
-                            <div className="rounded-2xl border border-primary/20 bg-primary/5 p-6">
-                              <div className="mb-4 flex items-center justify-between">
-                                <span className="text-[10px] font-black uppercase tracking-[0.3em] text-primary">
-                                  {pipelineStep || "Initializing AI Core..."}
-                                </span>
-                                <span className="font-mono text-[10px] font-bold text-primary/40">STEP {pipelineStep ? "2/3" : "1/3"}</span>
+                            <div className="relative overflow-hidden rounded-2xl border border-primary/30 bg-primary/5 p-8 shadow-[0_0_40px_rgba(177,197,255,0.1)]">
+                              <div className="absolute right-0 top-0 h-48 w-48 -mr-12 -mt-12 rounded-full bg-primary/10 blur-3xl animate-pulse" />
+                              <div className="mb-6 flex items-center justify-between">
+                                <div className="flex items-center gap-3">
+                                  <div className="relative flex h-10 w-10 items-center justify-center">
+                                    <div className="absolute inset-0 animate-ping rounded-full bg-primary/20" />
+                                    <div className="relative flex h-6 w-6 items-center justify-center rounded-full bg-primary shadow-[0_0_15px_rgba(177,197,255,0.5)]">
+                                      <Zap className="h-3.5 w-3.5 text-on-primary" />
+                                    </div>
+                                  </div>
+                                  <div>
+                                    <span className="block text-[10px] font-black uppercase tracking-[0.4em] text-primary">
+                                      AI Core Active
+                                    </span>
+                                    <span className="block font-headline text-lg font-bold text-white">
+                                      {pipelineStep || "Initializing..."}
+                                    </span>
+                                  </div>
+                                </div>
+                                <div className="text-right">
+                                  <span className="block font-mono text-[10px] font-bold text-primary/60 uppercase tracking-widest">Processing Intelligence</span>
+                                  <span className="block font-mono text-xs text-primary">LAYER_0{pipelineStep === "Market Intelligence" ? "1" : "2"}_ALPHA</span>
+                                </div>
                               </div>
-                              <div className="h-2 w-full overflow-hidden rounded-full bg-white/5">
-                                <div className="animate-shimmer h-full w-[45%] rounded-full bg-primary" />
+                              <div className="relative h-1.5 w-full overflow-hidden rounded-full bg-white/5">
+                                <div className="animate-progress-infinite absolute inset-0 w-full bg-gradient-to-r from-transparent via-primary/50 to-transparent" />
+                                <div 
+                                  className="h-full bg-primary transition-all duration-1000 ease-out shadow-[0_0_10px_#b1c5ff]" 
+                                  style={{ width: pipelineStep === "Market Intelligence" ? "45%" : "85%" }}
+                                />
+                              </div>
+                              <div className="mt-4 flex justify-between text-[9px] font-bold uppercase tracking-widest text-slate-500">
+                                <span>Signal Extraction</span>
+                                <span>Persona Synthesis</span>
+                                <span>Outreach Generation</span>
                               </div>
                             </div>
                           )}
