@@ -362,9 +362,9 @@ export default function PipelineWorkbench() {
                 <DashboardSkeleton />
               </div>
             ) : (
-              <div className="flex w-full min-h-[calc(100vh-12rem)] overflow-hidden rounded-3xl border border-white/10 bg-[#0b1326]/40 backdrop-blur-3xl shadow-2xl">
+              <div className="flex w-full h-[calc(100vh-5rem)] overflow-hidden bg-[#0b1326]/40 backdrop-blur-3xl">
                 {/* Left Column: Stationary sidebar (Grounded) */}
-                <div className="w-[380px] flex-shrink-0 flex flex-col border-r border-white/5 bg-black/20">
+                <div className="w-[400px] flex-shrink-0 flex flex-col border-r border-white/5 bg-black/20">
                   <PipelineIntakePanel
                     prospects={prospects}
                     selectedProspectId={selectedProspect?.id}
