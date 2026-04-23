@@ -276,7 +276,7 @@ export default function PipelineWorkbench() {
   };
 
   return (
-    <div className="relative min-h-screen">
+    <div className="relative min-h-screen bg-[#050810] text-slate-200 selection:bg-primary/30">
       <Toaster richColors position="top-right" />
       
       {/* Cinematic Background Elements */}
@@ -286,7 +286,7 @@ export default function PipelineWorkbench() {
         <div className="animate-mesh-slow absolute top-[20%] -right-[10%] h-[50%] w-[50%] rounded-full bg-secondary/5 blur-[120px]" />
       </div>
 
-      <div className="relative z-10 px-4 py-8 sm:px-6 lg:px-8">
+      <div className="relative z-10 w-full px-4 py-8 sm:px-6 lg:px-8">
         <div className="mb-6 flex flex-col gap-6 xl:flex-row xl:items-center xl:justify-between">
           <MotionCard className="glass-panel relative flex-1 overflow-hidden rounded-[24px] p-6 sm:p-8" hover={false}>
             <div className="absolute top-0 right-0 p-8 opacity-10">
@@ -352,17 +352,19 @@ export default function PipelineWorkbench() {
         </div>
 
         {activeTab === "analytics" ? (
-          <div className="animate-fade-up">
+          <div className="mx-auto max-w-[1600px] px-6 lg:px-12 animate-fade-up">
             <AnalyticsDashboard />
           </div>
         ) : (
           <div className="animate-fade-up">
             {isRefreshing && prospects.length === 0 ? (
-              <DashboardSkeleton />
+              <div className="mx-auto max-w-[1600px] px-6 lg:px-12">
+                <DashboardSkeleton />
+              </div>
             ) : (
-              <div className="flex w-full min-h-[800px] overflow-hidden rounded-[40px] border border-white/10 bg-[#0b1326]/40 backdrop-blur-3xl">
-                {/* Left Column: Stationary Sidebar */}
-                <div className="w-[400px] flex-shrink-0 flex flex-col border-r border-white/5">
+              <div className="flex w-full min-h-[calc(100vh-12rem)] overflow-hidden rounded-3xl border border-white/10 bg-[#0b1326]/40 backdrop-blur-3xl shadow-2xl">
+                {/* Left Column: Stationary sidebar (Grounded) */}
+                <div className="w-[380px] flex-shrink-0 flex flex-col border-r border-white/5 bg-black/20">
                   <PipelineIntakePanel
                     prospects={prospects}
                     selectedProspectId={selectedProspect?.id}
@@ -422,34 +424,43 @@ export default function PipelineWorkbench() {
                             </h2>
                             <div className="mt-6 flex flex-wrap items-center gap-6">
                               <div className="flex items-center gap-3 text-sm font-bold text-slate-400">
-                                <Building2 className="h-4 w-4 text-primary" />
-                                {selectedProspect.industry || "Market Vertical Unspecified"}
+                                {selectedProspect.industry || "General Vertical"}
                               </div>
-                              {selectedProspect.size && (
-                                <div className="flex items-center gap-3 text-sm font-bold text-slate-400">
-                                  <Users className="h-4 w-4 text-secondary" />
-                                  {selectedProspect.size} Unit Capacity
-                                </div>
-                              )}
+                              <div className="h-1 w-1 rounded-full bg-slate-800" />
+                              <div className="flex items-center gap-3 text-sm font-bold text-slate-400">
+                                <Users2 className="h-4 w-4 text-primary" />
+                                {selectedProspect.size || "10-50 employees"}
+                              </div>
                             </div>
                           </div>
 
-                          <button
-                            onClick={handleRunFullPipeline}
-                            disabled={pipelineRunning}
-                            className="haptic-hover group relative inline-flex h-20 items-center gap-4 rounded-[28px] bg-white px-10 text-sm font-black uppercase tracking-[0.2em] text-primary transition-all hover:bg-primary hover:text-white disabled:opacity-50"
-                          >
-                            {pipelineRunning ? (
-                              <Loader2 className="h-6 w-6 animate-spin" />
-                            ) : (
-                              <Zap className="h-6 w-6 transition-transform group-hover:scale-110" />
-                            )}
-                            {pipelineRunning ? (pipelineStep ?? "Processing...") : "Start Automation"}
-                            {!pipelineRunning && (
-                              <div className="absolute inset-0 -z-10 rounded-[28px] bg-primary/20 blur-2xl opacity-0 transition-opacity group-hover:opacity-100" />
-                            )}
-                          </button>
+                          <div className="flex flex-col items-end gap-6">
+                            <div className="flex items-center gap-4">
+                              <div className="flex flex-col items-end">
+                                <span className="text-[10px] font-black uppercase tracking-[0.2em] text-slate-500">Priority</span>
+                                <span className="font-mono text-4xl font-black text-white">{(selectedProspect.priority_score ?? 0).toFixed(0)}</span>
+                              </div>
+                              <div className="flex flex-col items-end">
+                                <span className="text-[10px] font-black uppercase tracking-[0.2em] text-slate-500">Status</span>
+                                <span className="rounded-full bg-secondary/10 px-3 py-1 text-[10px] font-black uppercase tracking-widest text-secondary border border-secondary/20">Verified</span>
+                              </div>
+                            </div>
+                            
+                            <button 
+                              onClick={handleRunFullPipeline}
+                              disabled={pipelineRunning}
+                              className="group flex items-center gap-3 rounded-2xl bg-white px-8 py-4 text-sm font-black uppercase tracking-widest text-black transition-all hover:bg-primary hover:text-white disabled:opacity-50 shadow-xl shadow-white/5"
+                            >
+                              {pipelineRunning ? (
+                                <RefreshCw className="h-4 w-4 animate-spin" />
+                              ) : (
+                                <Play className="h-4 w-4 fill-current" />
+                              )}
+                              {pipelineRunning ? `Running ${pipelineStep}...` : "Execute Full Pipeline"}
+                            </button>
+                          </div>
                         </div>
+                      </MotionCard>
 
                         {pipelineRunning && (
                           <div className="mt-12">
