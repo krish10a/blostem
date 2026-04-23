@@ -103,6 +103,8 @@ function getStatusColor(status?: string | null): string {
 export default function PipelineWorkbench() {
   const [prospects, setProspects] = useState<Prospect[]>([]);
   const [selectedProspect, setSelectedProspect] = useState<Prospect | null>(null);
+  const searchParams = useSearchParams();
+  const urlId = searchParams.get("id");
   const [activeTab, setActiveTab] = useState<"pipeline" | "analytics">("pipeline");
   const [deletingId, setDeletingId] = useState<number | null>(null);
   const [isRefreshing, setIsRefreshing] = useState(false);
@@ -110,6 +112,16 @@ export default function PipelineWorkbench() {
   const [pipelineStep, setPipelineStep] = useState<string | null>(null);
   const [selectedIds, setSelectedIds] = useState<Set<number>>(new Set());
   const [prospectListMode, setProspectListMode] = useState<"cards" | "table">("cards");
+  const router = useRouter();
+
+  const selectProspect = (p: Prospect | null) => {
+    setSelectedProspect(p);
+    if (p) {
+      router.push(`/pipeline?id=${p.id}`, { scroll: false });
+    } else {
+      router.push('/pipeline', { scroll: false });
+    }
+  };
 
   const sidebarRef = useRef<HTMLDivElement>(null);
   const scrollPosRef = useRef<number>(0);
@@ -123,6 +135,8 @@ export default function PipelineWorkbench() {
         data = data.map(normalizeProspect);
         data = data.sort((a, b) => (b.priority_score || 0) - (a.priority_score || 0));
         setProspects(data);
+        // Notify other components (like sidebar) that prospects were updated
+        window.dispatchEvent(new CustomEvent('prospects-updated'));
         if (selectedProspect) {
           const updated = data.find((p) => p.id === selectedProspect.id);
           if (updated) setSelectedProspect(updated);
@@ -142,6 +156,14 @@ export default function PipelineWorkbench() {
     return () => window.clearTimeout(timeout);
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
+
+  // Sync selection with URL
+  useEffect(() => {
+    if (urlId && prospects.length > 0) {
+      const p = prospects.find(p => p.id.toString() === urlId);
+      if (p) setSelectedProspect(p);
+    }
+  }, [urlId, prospects]);
 
   useEffect(() => {
     if (sidebarRef.current) sidebarRef.current.scrollTop = scrollPosRef.current;
@@ -447,7 +469,7 @@ export default function PipelineWorkbench() {
                             return (
                               <div
                                 key={p.id}
-                                onClick={() => setSelectedProspect(p)}
+                                onClick={() => selectProspect(p)}
                                 className={cn(
                                   "group flex cursor-pointer items-center justify-between rounded-xl border px-4 py-3.5 transition-all",
                                   isSelected
@@ -493,7 +515,7 @@ export default function PipelineWorkbench() {
                                   )}
                                   delay={Math.min(index * 0.035, 0.21)}
                                 >
-                                  <div className="p-5" onClick={() => setSelectedProspect(p)}>
+                                  <div className="p-5" onClick={() => selectProspect(p)}>
                                     <div className="flex items-start justify-between gap-4">
                                       <div className="min-w-0 flex-1">
                                         <div className="truncate font-headline text-lg font-black tracking-tighter text-white">
