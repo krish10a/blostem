@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import React, { useState } from "react";
 import { 
   Plus, 
   Table, 
@@ -40,8 +40,8 @@ interface PipelineIntakePanelProps {
   onSelect: (p: Prospect) => void;
   onRefresh: () => void;
   selectedIds: Set<number>;
-  onToggleSelect: (id: number, e: any) => void;
-  onDelete: (id: number, e: any) => void;
+  onToggleSelect: (id: number, e: React.MouseEvent | React.ChangeEvent) => void;
+  onDelete: (id: number, e: React.MouseEvent) => void;
   onBatchDelete: () => void;
   listMode: "cards" | "table";
   setListMode: (mode: "cards" | "table") => void;
@@ -97,8 +97,9 @@ export default function PipelineIntakePanel({
         const errorData = await res.json().catch(() => ({}));
         throw new Error(errorData.detail || "Failed to seed demo data.");
       }
-    } catch (err: any) {
-      toast.error(err.message || "Backend connection error during seeding.");
+    } catch (err: unknown) {
+      const errMsg = err instanceof Error ? err.message : "Backend connection error during seeding.";
+      toast.error(errMsg);
     } finally {
       setIsSeeding(false);
     }

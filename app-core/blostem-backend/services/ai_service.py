@@ -31,6 +31,10 @@ GROQ_MODEL = os.getenv("GROQ_MODEL", "llama-3.3-70b-versatile")
 OLLAMA_MODEL = os.getenv("OLLAMA_MODEL", "gemma2")
 OLLAMA_URL = "http://localhost:11434/api/generate"
 
+# NVIDIA NIM Configuration
+NVIDIA_API_KEY = os.getenv("NVIDIA_API_KEY", "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")
+NVIDIA_MODEL = os.getenv("NVIDIA_MODEL", "nvidia/nemotron-3-super-120b-a12b")
+
 _clients_cache = None
 
 def get_clients():
@@ -86,6 +90,42 @@ def _call_ollama(prompt: str, json_mode: bool = True):
         print(f"ERROR: Local Ollama fallback failed: {str(e)}")
         raise e
 
+def _call_nvidia(prompt: str, json_mode: bool = True):
+    """Primary intelligence call using NVIDIA NIM API with Nemotron-3 Super model."""
+    if not NVIDIA_API_KEY:
+        raise ValueError("NVIDIA_API_KEY not configured")
+    try:
+        print(f"DEBUG: Invoking NVIDIA NIM (Model: {NVIDIA_MODEL})")
+        client = OpenAI(
+            base_url="https://integrate.api.nvidia.com/v1",
+            api_key=NVIDIA_API_KEY
+        )
+        
+        # System instructions
+        system_msg = "You are an elite B2B fintech intelligence AI. You respond strictly in highly structured raw JSON format where requested. Do not include markdown wraps."
+        
+        # Standard chat completion utilizing the model parameters specified by user
+        completion = client.chat.completions.create(
+            model=NVIDIA_MODEL,
+            messages=[
+                {"role": "system", "content": system_msg if json_mode else "You are an elite B2B fintech intelligence AI."},
+                {"role": "user", "content": prompt}
+            ],
+            temperature=0.2 if json_mode else 0.7,
+            top_p=0.95,
+            max_tokens=16384,
+            extra_body={"chat_template_kwargs": {"enable_thinking": True}, "reasoning_budget": 16384} if "nemotron" in NVIDIA_MODEL.lower() or "reason" in NVIDIA_MODEL.lower() else None,
+            stream=False
+        )
+        
+        content = completion.choices[0].message.content
+        if not content:
+            raise ValueError("NVIDIA NIM returned an empty response.")
+        return content
+    except Exception as e:
+        print(f"ERROR: NVIDIA NIM execution failed: {str(e)}")
+        raise e
+
 def _call_groq(prompt: str, json_mode: bool = True, use_search: bool = False):
     """Fallback to Groq API (OpenAI compatible)."""
     if not GROQ_API_KEY:
@@ -120,27 +160,36 @@ def _call_groq(prompt: str, json_mode: bool = True, use_search: bool = False):
         raise e
 
 def _call_ai(prompt: str, json_mode: bool = True, use_search: bool = False):
-    """Retries with multiple Gemini API keys and faster failover to Groq if quota/rate limits occur."""
+    """
+    Main AI dispatch controller. 
+    Prioritizes NVIDIA NIM API as the primary AI reasoning engine.
+    Falls back sequentially to:
+      1. Gemini (multi-key rotation)
+      2. Groq (Llama 3.3 backup)
+      3. Ollama (offline local fallback)
+    """
     last_error = None
-    clients = get_clients()
     
-    # 1. Try Gemini first (most advanced + integrated search)
+    # 1. Try NVIDIA NIM First (Primary High-Fidelity Intelligence Engine)
+    if NVIDIA_API_KEY:
+        try:
+            return _call_nvidia(prompt, json_mode)
+        except Exception as e:
+            last_error = e
+            print(f"WARNING: NVIDIA NIM API failed. Transitioning to secondary cloud models. Error: {str(e)}")
+
+    # 2. Try Gemini Second (Multi-Key Rotation & Google Search integration)
+    clients = get_clients()
     if clients:
         for i, client in enumerate(clients):
-            # For 429 errors, we fail over to the NEXT key immediately instead of long retries
-            # to keep the pipeline moving.
-            max_retries = 2 # 1 primary + 1 retry for transient errors
-            
+            max_retries = 2
             for attempt in range(max_retries):
                 try:
-                    print(f"DEBUG: Gemini call Key {i+1} (Attempt {attempt+1}/{max_retries}, Search: {use_search})")
-                    
+                    print(f"DEBUG: Gemini fallback call Key {i+1} (Attempt {attempt+1}/{max_retries}, Search: {use_search})")
                     config = {
                         'temperature': 0.1 if json_mode else 0.2,
                         'response_mime_type': 'application/json' if json_mode else 'text/plain'
                     }
-                    
-                    # Enable Google Search Retrieval if requested
                     if use_search:
                         config['tools'] = [{'google_search': {}}]
 
@@ -149,55 +198,49 @@ def _call_ai(prompt: str, json_mode: bool = True, use_search: bool = False):
                         contents=prompt,
                         config=config
                     )
-                    
                     if not response or not response.text:
-                        raise ValueError("Gemini returned an empty response.")
-                        
+                        raise ValueError("Gemini returned empty.")
                     return response.text
-                    
-                except Exception as e:
-                    last_error = e
-                    err_msg = str(e).lower()
-                    
-                    # If rate limited, try next key immediately
-                    if "429" in err_msg or "quota" in err_msg or "exhausted" in err_msg or "rate_limit" in err_msg:
-                        print(f"WARNING: Key {i+1} rate-limited. Moving to next provider...")
-                        break # Switch to next key or Groq
-                    
-                    # If 500 or 503, maybe retry once
+                except Exception as gemini_err:
+                    last_error = gemini_err
+                    err_msg = str(gemini_err).lower()
+                    if "429" in err_msg or "quota" in err_msg or "exhausted" in err_msg:
+                        break
                     elif ("500" in err_msg or "503" in err_msg) and attempt < max_retries - 1:
                         time.sleep(1)
                         continue
                     else:
-                        break # Move to next key or Groq
-                
-    # 2. Fallback to Groq (reliable cloud fallback)
+                        break
+
+    # 3. Try Groq Third (High-Speed Cloud Backup)
     if GROQ_API_KEY:
-        print("WARNING: Gemini unavailable. Attempting Groq...")
+        print("WARNING: Gemini fallback unavailable. Attempting Groq...")
         try:
             return _call_groq(prompt, json_mode, use_search)
         except Exception as groq_err:
+            last_error = groq_err
             print(f"ERROR: Groq failed: {str(groq_err)}")
 
-    # 3. Final Fallback to local Ollama
+    # 4. Try Ollama Fourth (Local Offline Resilience)
     if os.getenv("ENABLE_OLLAMA_FALLBACK", "false").lower() == "true" or "localhost" in OLLAMA_URL:
-        print("WARNING: Cloud providers failed. Attempting Ollama...")
+        print("WARNING: Cloud fallbacks exhausted. Attempting local Ollama...")
         try:
             return _call_ollama(prompt, json_mode)
         except Exception as ollama_err:
+            last_error = ollama_err
             print(f"CRITICAL: Ollama failed: {str(ollama_err)}")
             
-    print("CRITICAL: All AI systems unavailable.")
+    print("CRITICAL: All intelligence pipelines unavailable.")
     if json_mode:
         return json.dumps({
             "error": "Capacity reached",
-            "signal_summary": "AI services are currently reaching capacity limits. Please try again later.",
+            "signal_summary": "All primary and fallback AI networks are currently saturated. Please try again shortly.",
             "fit_score": 0, "intent_score": 0, "priority_score": 0, "confidence_score": 0,
             "personas": [], "outreach_payload": [], "sequence_payload": [], "steps": [],
             "overall_status": "NEEDS_REVIEW", "compliance_summary": "Service busy.", "safe_to_send": False,
             "action": "Nurture", "reason": "AI capacity reached."
         })
-    raise last_error or Exception("AI Service Unavailable")
+    raise last_error or Exception("AI Engine Saturated")
 
 # ─────────────────────────────────────────────────────────────────────────────
 # CONSOLIDATED PIPELINES (Efficiency Boost)
@@ -339,10 +382,10 @@ def generate_sequence_timeline(company_name: str, signals_json: str, outreach_js
     raw_response = _call_ai(prompt)
     try:
         data = json.loads(_clean_json(raw_response))
-        return {"sequence_payload": data.get("sequence_payload", [])}
-    except:
-        return {"sequence_payload": []}
-d = data
+        if isinstance(data, dict):
+            payload = data.get("sequence_payload", [])
+            if not isinstance(payload, list):
+                payload = [data]
         else:
             payload = [data]
             
@@ -351,3 +394,4 @@ d = data
     except Exception as e:
         print(f"ERROR: Sequence generation failed: {e}")
         return {"sequence_payload": []}
+

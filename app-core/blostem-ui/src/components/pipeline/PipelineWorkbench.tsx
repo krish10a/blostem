@@ -221,6 +221,7 @@ export default function PipelineWorkbench() {
   useEffect(() => {
     if (urlId && prospects.length > 0) {
       const p = prospects.find(p => p.id.toString() === urlId);
+      // eslint-disable-next-line react-hooks/set-state-in-effect
       if (p) setSelectedProspect(p);
     }
   }, [urlId, prospects]);

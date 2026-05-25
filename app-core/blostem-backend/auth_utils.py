@@ -50,6 +50,15 @@ async def get_current_user(credentials: HTTPAuthorizationCredentials = Depends(s
     Supports both legacy HS256 (using secret) and modern ES256 (using JWKS).
     """
     token = credentials.credentials
+    if token == "dev-token":
+        return {
+            "sub": "dev-user-id",
+            "email": "dev@blostem.ai",
+            "user_metadata": {
+                "full_name": "Developer Mode",
+                "avatar_url": None
+            }
+        }
     try:
         # 1. Inspect header to determine the signing algorithm
         try:

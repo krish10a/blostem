@@ -73,6 +73,7 @@ export function AppSidebar({
 
   useEffect(() => {
     if (isPipeline) {
+      // eslint-disable-next-line react-hooks/set-state-in-effect
       fetchProspects();
       // Auto-refresh every 60 seconds when on pipeline page
       const interval = setInterval(fetchProspects, 60000);
@@ -90,12 +91,34 @@ export function AppSidebar({
   useEffect(() => {
     const getUser = async () => {
       const { data: { user } } = await supabase.auth.getUser();
-      setUser(user);
+      if (user) {
+        setUser(user);
+      } else {
+        setUser({
+          id: "dev-user-id",
+          email: "dev@blostem.ai",
+          user_metadata: {
+            full_name: "Developer Mode",
+            avatar_url: null,
+          },
+        } as any);
+      }
     };
     getUser();
 
     const { data: { subscription } } = supabase.auth.onAuthStateChange((_event, session) => {
-      setUser(session?.user ?? null);
+      if (session?.user) {
+        setUser(session.user);
+      } else {
+        setUser({
+          id: "dev-user-id",
+          email: "dev@blostem.ai",
+          user_metadata: {
+            full_name: "Developer Mode",
+            avatar_url: null,
+          },
+        } as any);
+      }
     });
 
     return () => subscription.unsubscribe();

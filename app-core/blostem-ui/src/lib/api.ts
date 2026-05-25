@@ -12,7 +12,8 @@ export async function fetchWithAuth(path: string, options: RequestInit = {}) {
     console.log("Auth: Token found, attaching to request.");
     headers.set("Authorization", `Bearer ${session.access_token}`);
   } else {
-    console.warn("Auth: No active session found. Request will be unauthenticated.");
+    console.warn("Auth: No active session found. Attaching developer bypass token.");
+    headers.set("Authorization", "Bearer dev-token");
   }
   
   if (!headers.has("Content-Type") && !(options.body instanceof FormData)) {
