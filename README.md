@@ -40,7 +40,7 @@ graph TD
 ```
 
 1. **Intake Protocol**: Bulk ingest prospects via standard CSV spreadsheet uploads or input manually with custom company contexts.
-2. **Signal Intelligence**: Queries Gemini 2.0 with active web search tool integrations to fetch fresh hiring patterns, funding news, active technology stacks, and operational pain points.
+2. **Signal Intelligence**: Queries the primary reasoning engine (NVIDIA NIM / fallback models) to fetch fresh hiring patterns, funding news, active technology stacks, and operational pain points.
 3. **Dynamic Scoring**: Computes mathematical sub-scores across five parameters (Fintech Relevance, Growth Signals, Product Fit, Hiring Activity, Recency) using a weighted algorithm to construct Fit, Intent, Priority, and Confidence metrics.
 4. **Persona Mapping**: Generates exactly 5 distinct decision-maker personas per prospect (Founder/CEO, VP Product, Head of Partnerships, VP Growth, VP Compliance), detailing their role-specific pain points, likely objections, and custom pitch angles.
 5. **Outreach Generation**: Generates 5 high-converting message formats per persona: Initial Email, Follow-up Email, LinkedIn InMail, Cold Call Script, and internal operator briefing notes.
@@ -148,7 +148,9 @@ To deploy Blostem AI to production (e.g. Vercel for UI, Render/Railway for backe
 ### Backend Environment Variables (`.env`)
 - `DATABASE_URL`: Set to your production PostgreSQL connection string (e.g. Supabase, RDS).
 - `SUPABASE_JWT_SECRET`: The JWT secret key from your Supabase auth dashboard, used to verify ES256/HS256 tokens.
-- `GEMINI_API_KEY_1` to `GEMINI_API_KEY_4`: Your active Google Gemini developer API keys for key-rotation and quota handling.
+- `NVIDIA_API_KEY`: Your NVIDIA NIM developer API key for the primary reasoning engine.
+- `NVIDIA_MODEL`: Model ID to utilize (defaults to `nvidia/nemotron-3-super-120b-a12b`).
+- `GEMINI_API_KEY_1` to `GEMINI_API_KEY_4`: Your fallback Google Gemini developer API keys for key-rotation and quota handling.
 - `GROQ_API_KEY`: High-speed cloud backup key (Llama 3.3 fallback).
 
 ### Frontend Environment Variables (`.env.local` / Vercel Settings)
